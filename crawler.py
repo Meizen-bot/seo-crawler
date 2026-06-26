@@ -101,7 +101,7 @@ class SEOCrawler:
             if "text/html" not in content_type:
                 return page
 
-            soup = BeautifulSoup(resp.text, "lxml")
+            soup = BeautifulSoup(resp.text, "html.parser")
 
             title_tag = soup.find("title")
             page.title = title_tag.get_text(strip=True) if title_tag else ""
