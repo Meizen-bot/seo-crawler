@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SEO Crawler — Force Graph</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --border: #2e3250;
+      --text: #e2e8f0;
+      --text-muted: #8892b0;
+      --accent: #7c6cff;
+      --accent2: #56cfb2;
+      --ok: #22c55e;
+      --warn: #f59e0b;
+      --err: #ef4444;
+      --info: #3b82f6;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 13px;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── TOP BAR ── */
+    #topbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+    #topbar h1 { font-size: 15px; font-weight: 700; color: var(--accent); white-space: nowrap; }
+    #topbar h1 span { color: var(--accent2); }
+    #urlInput {
+      flex: 1;
+      min-width: 220px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 7px 10px;
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+    }
+    #urlInput:focus { border-color: var(--accent); }
+    .cfg-row { display: flex; gap: 8px; align-items: center; }
+    .cfg-row label { color: var(--text-muted); font-size: 12px; }
+    .cfg-row input[type=number] {
+      width: 70px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      outline: none;
+    }
+    button {
+      padding: 7px 16px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      transition: opacity .15s;
+    }
+    button:hover { opacity: .85; }
+    #btnStart { background: var(--accent); color: #fff; }
+    #btnStop  { background: var(--err); color: #fff; display: none; }
+    #btnLoad  { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    #fileInput { display: none; }
+
+    /* ── STATS BAR ── */
+    #statsbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 6px 16px;
+      display: flex;
+      gap: 24px;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .stat { display: flex; flex-direction: column; align-items: center; }
+    .stat-val { font-size: 18px; font-weight: 700; }
+    .stat-lbl { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; }
+    .s-ok  { color: var(--ok); }
+    .s-warn{ color: var(--warn); }
+    .s-err { color: var(--err); }
+    .s-acc { color: var(--accent2); }
+
+    /* ── PROGRESS ── */
+    #progressWrap {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 6px 16px;
+      display: none;
+      flex-direction: column;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    #progressBar {
+      height: 4px;
+      background: var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    #progressFill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      width: 0%;
+      transition: width .3s;
+    }
+    #progressLabel { font-size: 11px; color: var(--text-muted); }
+
+    /* ── MAIN LAYOUT ── */
+    #main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── GRAPH ── */
+    #graphWrap {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+    #graph { width: 100%; height: 100%; }
+    .node circle { cursor: pointer; stroke-width: 1.5px; }
+    .node circle:hover { stroke: #fff !important; stroke-width: 2.5px; }
+    .node.highlighted circle { stroke: #fff; stroke-width: 3px; }
+    .link { stroke: #3a3f5c; stroke-opacity: 0.5; fill: none; }
+    .link.highlighted { stroke: var(--accent2); stroke-opacity: 1; }
+
+    #graphEmpty {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 12px;
+      pointer-events: none;
+    }
+    #graphEmpty .icon { font-size: 48px; opacity: .3; }
+    #graphEmpty p { color: var(--text-muted); font-size: 14px; }
+
+    /* ── TOOLTIP ── */
+    #tooltip {
+      position: fixed;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .15s;
+      max-width: 320px;
+      z-index: 100;
+      box-shadow: 0 8px 32px #0008;
+    }
+    #tooltip.visible { opacity: 1; }
+    .tt-url { font-size: 11px; color: var(--accent); word-break: break-all; margin-bottom: 6px; }
+    .tt-title { font-weight: 600; margin-bottom: 8px; }
+    .tt-grid { display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; font-size: 12px; }
+    .tt-lbl { color: var(--text-muted); }
+    .tt-val { color: var(--text); font-weight: 500; }
+
+    /* ── SIDE PANEL ── */
+    #panel {
+      width: 440px;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    #panelHeader {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    #panelHeader h2 { font-size: 13px; font-weight: 600; flex: 1; }
+    select, #filterSearch {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 5px 8px;
+      border-radius: 5px;
+      font-size: 12px;
+      outline: none;
+    }
+    #filterSearch { flex: 1; min-width: 120px; }
+
+    #tableWrap { flex: 1; overflow-y: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      background: var(--surface2);
+      padding: 7px 10px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      cursor: pointer;
+      position: sticky;
+      top: 0;
+      user-select: none;
+      white-space: nowrap;
+    }
+    thead th:hover { color: var(--text); }
+    thead th .sort-icon { margin-left: 4px; opacity: .5; }
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background .1s;
+    }
+    tbody tr:hover { background: var(--surface2); }
+    tbody tr.selected { background: #7c6cff22; }
+    tbody td { padding: 6px 10px; font-size: 12px; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .b-ok   { background: #22c55e22; color: var(--ok); }
+    .b-warn { background: #f59e0b22; color: var(--warn); }
+    .b-err  { background: #ef444422; color: var(--err); }
+    .b-unk  { background: #8892b022; color: var(--text-muted); }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--surface); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <h1>SEO <span>Crawler</span></h1>
+  <input id="urlInput" type="url" placeholder="https://example.com" />
+  <div class="cfg-row">
+    <label>Max URLs</label>
+    <input id="maxUrls" type="number" value="200" min="1" max="2000" />
+  </div>
+  <div class="cfg-row">
+    <label>Délai (s)</label>
+    <input id="crawlDelay" type="number" value="0.5" min="0" max="10" step="0.1" />
+  </div>
+  <button id="btnStart">▶ Lancer</button>
+  <button id="btnStop">■ Stopper</button>
+  <button id="btnLoad">📂 Charger JSON</button>
+  <input id="fileInput" type="file" accept=".json" />
+</div>
+
+<!-- PROGRESS -->
+<div id="progressWrap">
+  <div id="progressLabel">Initialisation…</div>
+  <div id="progressBar"><div id="progressFill"></div></div>
+</div>
+
+<!-- STATS -->
+<div id="statsbar">
+  <div class="stat"><span class="stat-val" id="st-total">—</span><span class="stat-lbl">Pages</span></div>
+  <div class="stat"><span class="stat-val s-ok" id="st-200">—</span><span class="stat-lbl">200 OK</span></div>
+  <div class="stat"><span class="stat-val s-warn" id="st-3xx">—</span><span class="stat-lbl">3xx</span></div>
+  <div class="stat"><span class="stat-val s-err" id="st-err">—</span><span class="stat-lbl">Erreurs</span></div>
+  <div class="stat"><span class="stat-val s-acc" id="st-depth">—</span><span class="stat-lbl">Profondeur max</span></div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+  <div id="graphWrap">
+    <svg id="graph"></svg>
+    <div id="graphEmpty">
+      <div class="icon">🕸️</div>
+      <p>Lancez un crawl ou chargez un fichier JSON pour visualiser le graphe</p>
+    </div>
+  </div>
+
+  <div id="panel">
+    <div id="panelHeader">
+      <h2>Pages crawlées</h2>
+      <input id="filterSearch" type="search" placeholder="Filtrer par URL / titre…" />
+      <select id="filterStatus">
+        <option value="">Tous statuts</option>
+        <option value="200">200 OK</option>
+        <option value="3xx">3xx</option>
+        <option value="4xx">4xx</option>
+        <option value="5xx">5xx</option>
+        <option value="0">Erreur</option>
+      </select>
+      <select id="filterDepth">
+        <option value="">Toutes profondeurs</option>
+      </select>
+    </div>
+    <div id="tableWrap">
+      <table>
+        <thead>
+          <tr>
+            <th data-col="url">URL <span class="sort-icon">↕</span></th>
+            <th data-col="title">Titre <span class="sort-icon">↕</span></th>
+            <th data-col="status_code">Status <span class="sort-icon">↕</span></th>
+            <th data-col="depth">Depth <span class="sort-icon">↕</span></th>
+            <th data-col="inlinks_count">In <span class="sort-icon">↕</span></th>
+            <th data-col="outlinks_count">Out <span class="sort-icon">↕</span></th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div id="tooltip">
+  <div class="tt-url" id="tt-url"></div>
+  <div class="tt-title" id="tt-title"></div>
+  <div class="tt-grid">
+    <span class="tt-lbl">Status</span>      <span class="tt-val" id="tt-status"></span>
+    <span class="tt-lbl">Profondeur</span>  <span class="tt-val" id="tt-depth"></span>
+    <span class="tt-lbl">Inlinks</span>     <span class="tt-val" id="tt-inlinks"></span>
+    <span class="tt-lbl">Outlinks</span>    <span class="tt-val" id="tt-outlinks"></span>
+    <span class="tt-lbl">Mots</span>        <span class="tt-val" id="tt-words"></span>
+    <span class="tt-lbl">H1</span>          <span class="tt-val" id="tt-h1"></span>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════════
+   STATE
+════════════════════════════════════════════ */
+let graphData = null;
+let simulation = null;
+let ws = null;
+let sortCol = "inlinks_count";
+let sortDir = -1;
+let selectedNodeId = null;
+
+/* ════════════════════════════════════════════
+   WEBSOCKET
+════════════════════════════════════════════ */
+function connectWS() {
+  const proto = location.protocol === "https:" ? "wss" : "ws";
+  ws = new WebSocket(`${proto}://${location.host}/ws`);
+
+  ws.onmessage = (evt) => {
+    const msg = JSON.parse(evt.data);
+    if (msg.type === "progress") {
+      showProgress(msg.crawled, msg.total_queued, msg.current_url);
+    } else if (msg.type === "done") {
+      hideProgress();
+      fetchData();
+      setBtnState(false);
+    } else if (msg.type === "error") {
+      hideProgress();
+      setBtnState(false);
+      alert("Erreur crawl : " + msg.message);
+    } else if (msg.type === "state" && msg.running) {
+      setBtnState(true);
+      document.getElementById("progressWrap").style.display = "flex";
+    }
+  };
+  ws.onclose = () => setTimeout(connectWS, 3000);
+}
+
+/* ════════════════════════════════════════════
+   PROGRESS
+════════════════════════════════════════════ */
+function showProgress(crawled, total, url) {
+  const wrap = document.getElementById("progressWrap");
+  wrap.style.display = "flex";
+  const pct = total > 0 ? Math.min(100, (crawled / total) * 100) : 0;
+  document.getElementById("progressFill").style.width = pct + "%";
+  const short = url.length > 70 ? "…" + url.slice(-70) : url;
+  document.getElementById("progressLabel").textContent =
+    `Crawl en cours : ${crawled} / ${total} pages  —  ${short}`;
+}
+function hideProgress() {
+  document.getElementById("progressWrap").style.display = "none";
+}
+
+function setBtnState(running) {
+  document.getElementById("btnStart").style.display = running ? "none" : "";
+  document.getElementById("btnStop").style.display  = running ? "" : "none";
+}
+
+/* ════════════════════════════════════════════
+   FETCH DATA
+════════════════════════════════════════════ */
+async function fetchData() {
+  try {
+    const r = await fetch("/api/data");
+    if (!r.ok) return;
+    graphData = await r.json();
+    renderAll();
+  } catch(e) { console.error(e); }
+}
+
+/* ════════════════════════════════════════════
+   STATS
+════════════════════════════════════════════ */
+function updateStats(nodes) {
+  const ok   = nodes.filter(n => n.status_code === 200).length;
+  const rxx  = nodes.filter(n => n.status_code >= 300 && n.status_code < 400).length;
+  const err  = nodes.filter(n => n.status_code >= 400 || n.status_code === 0).length;
+  const dep  = Math.max(...nodes.map(n => n.depth), 0);
+  document.getElementById("st-total").textContent = nodes.length;
+  document.getElementById("st-200").textContent   = ok;
+  document.getElementById("st-3xx").textContent   = rxx;
+  document.getElementById("st-err").textContent   = err;
+  document.getElementById("st-depth").textContent = dep;
+
+  // Populate depth filter
+  const sel = document.getElementById("filterDepth");
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">Toutes profondeurs</option>';
+  const depths = [...new Set(nodes.map(n => n.depth))].sort((a,b) => a-b);
+  depths.forEach(d => {
+    const o = document.createElement("option");
+    o.value = d; o.textContent = "Depth " + d;
+    sel.appendChild(o);
+  });
+  sel.value = prev;
+}
+
+/* ════════════════════════════════════════════
+   STATUS HELPERS
+════════════════════════════════════════════ */
+function statusColor(code) {
+  if (code === 200) return "#22c55e";
+  if (code >= 300 && code < 400) return "#f59e0b";
+  if (code >= 400) return "#ef4444";
+  return "#6b7280";
+}
+function statusBadge(code) {
+  if (code === 200) return `<span class="badge b-ok">${code}</span>`;
+  if (code >= 300 && code < 400) return `<span class="badge b-warn">${code}</span>`;
+  if (code >= 400) return `<span class="badge b-err">${code}</span>`;
+  return `<span class="badge b-unk">${code || "Err"}</span>`;
+}
+
+/* ════════════════════════════════════════════
+   D3 FORCE GRAPH
+════════════════════════════════════════════ */
+function renderGraph(data) {
+  document.getElementById("graphEmpty").style.display = "none";
+  const svg = d3.select("#graph");
+  svg.selectAll("*").remove();
+
+  const W = svg.node().clientWidth || 900;
+  const H = svg.node().clientHeight || 600;
+
+  const defs = svg.append("defs");
+  defs.append("marker")
+    .attr("id", "arrow")
+    .attr("viewBox", "0 -4 8 8")
+    .attr("refX", 14).attr("refY", 0)
+    .attr("markerWidth", 5).attr("markerHeight", 5)
+    .attr("orient", "auto")
+    .append("path")
+    .attr("d", "M0,-4L8,0L0,4")
+    .attr("fill", "#4a5080");
+
+  const g = svg.append("g");
+
+  // Zoom
+  const zoom = d3.zoom()
+    .scaleExtent([0.05, 6])
+    .on("zoom", (e) => g.attr("transform", e.transform));
+  svg.call(zoom);
+
+  const maxIn = Math.max(1, d3.max(data.nodes, n => n.inlinks_count));
+  const nodeRadius = d => Math.max(4, Math.min(24, 5 + (n => n * 18)(d.inlinks_count / maxIn)));
+
+  // Simulation
+  simulation = d3.forceSimulation(data.nodes)
+    .force("link", d3.forceLink(data.edges)
+      .id(d => d.id)
+      .distance(60)
+      .strength(0.3))
+    .force("charge", d3.forceManyBody().strength(-120))
+    .force("center", d3.forceCenter(W / 2, H / 2))
+    .force("collision", d3.forceCollide(d => nodeRadius(d) + 3));
+
+  const link = g.append("g").selectAll("path")
+    .data(data.edges)
+    .join("path")
+    .attr("class", "link")
+    .attr("marker-end", "url(#arrow)");
+
+  const node = g.append("g").selectAll("g")
+    .data(data.nodes)
+    .join("g")
+    .attr("class", "node")
+    .attr("data-id", d => d.id)
+    .call(d3.drag()
+      .on("start", (e, d) => {
+        if (!e.active) simulation.alphaTarget(0.3).restart();
+        d.fx = d.x; d.fy = d.y;
+      })
+      .on("drag", (e, d) => { d.fx = e.x; d.fy = e.y; })
+      .on("end", (e, d) => {
+        if (!e.active) simulation.alphaTarget(0);
+        d.fx = null; d.fy = null;
+      }));
+
+  node.append("circle")
+    .attr("r", d => nodeRadius(d))
+    .attr("fill", d => statusColor(d.status_code))
+    .attr("fill-opacity", 0.85)
+    .attr("stroke", d => statusColor(d.status_code))
+    .attr("stroke-opacity", 0.4);
+
+  const tooltip = document.getElementById("tooltip");
+
+  node.on("mousemove", (e, d) => {
+    tooltip.classList.add("visible");
+    const short = d.url.length > 60 ? d.url.slice(0, 60) + "…" : d.url;
+    document.getElementById("tt-url").textContent = d.url;
+    document.getElementById("tt-title").textContent = d.title || "(sans titre)";
+    document.getElementById("tt-status").textContent  = d.status_code || "Erreur";
+    document.getElementById("tt-depth").textContent   = d.depth;
+    document.getElementById("tt-inlinks").textContent = d.inlinks_count;
+    document.getElementById("tt-outlinks").textContent= d.outlinks_count;
+    document.getElementById("tt-words").textContent   = d.word_count.toLocaleString();
+    document.getElementById("tt-h1").textContent      = d.h1.join(" / ") || "—";
+    tooltip.style.left = (e.clientX + 16) + "px";
+    tooltip.style.top  = (e.clientY - 10) + "px";
+  })
+  .on("mouseleave", () => tooltip.classList.remove("visible"))
+  .on("click", (e, d) => {
+    e.stopPropagation();
+    highlightNode(d.id);
+    selectTableRow(d.id);
+  });
+
+  simulation.on("tick", () => {
+    link.attr("d", d => {
+      const dx = d.target.x - d.source.x;
+      const dy = d.target.y - d.source.y;
+      const dr = Math.sqrt(dx * dx + dy * dy);
+      return `M${d.source.x},${d.source.y}A${dr},${dr} 0 0,1 ${d.target.x},${d.target.y}`;
+    });
+    node.attr("transform", d => `translate(${d.x},${d.y})`);
+  });
+
+  svg.on("click", () => {
+    clearHighlight();
+    clearTableSelection();
+  });
+
+  window._graphNode = node;
+  window._graphLink = link;
+  window._graphData = data;
+
+  // auto-fit after settle
+  setTimeout(() => {
+    if (!graphData) return;
+    const bounds = g.node().getBBox();
+    if (!bounds.width) return;
+    const pad = 40;
+    const scale = Math.min(
+      (W - pad * 2) / bounds.width,
+      (H - pad * 2) / bounds.height,
+      1.5
+    );
+    const tx = W / 2 - scale * (bounds.x + bounds.width / 2);
+    const ty = H / 2 - scale * (bounds.y + bounds.height / 2);
+    svg.transition().duration(600)
+      .call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
+  }, 2500);
+}
+
+function highlightNode(id) {
+  selectedNodeId = id;
+  if (!window._graphNode) return;
+  window._graphNode.classed("highlighted", d => d.id === id);
+  // highlight connected links
+  window._graphLink.classed("highlighted", d =>
+    d.source.id === id || d.target.id === id
+  );
+}
+function clearHighlight() {
+  selectedNodeId = null;
+  if (!window._graphNode) return;
+  window._graphNode.classed("highlighted", false);
+  window._graphLink.classed("highlighted", false);
+}
+
+/* ════════════════════════════════════════════
+   TABLE
+════════════════════════════════════════════ */
+function renderTable() {
+  if (!graphData) return;
+  const search = document.getElementById("filterSearch").value.toLowerCase();
+  const status = document.getElementById("filterStatus").value;
+  const depth  = document.getElementById("filterDepth").value;
+
+  let rows = graphData.nodes.filter(n => {
+    const matchSearch = !search || n.url.toLowerCase().includes(search) || n.title.toLowerCase().includes(search);
+    let matchStatus = true;
+    if (status === "200") matchStatus = n.status_code === 200;
+    else if (status === "3xx") matchStatus = n.status_code >= 300 && n.status_code < 400;
+    else if (status === "4xx") matchStatus = n.status_code >= 400 && n.status_code < 500;
+    else if (status === "5xx") matchStatus = n.status_code >= 500;
+    else if (status === "0")   matchStatus = n.status_code === 0;
+    const matchDepth = depth === "" || n.depth === parseInt(depth);
+    return matchSearch && matchStatus && matchDepth;
+  });
+
+  rows.sort((a, b) => sortDir * (
+    typeof a[sortCol] === "string"
+      ? a[sortCol].localeCompare(b[sortCol])
+      : (a[sortCol] - b[sortCol])
+  ));
+
+  const tbody = document.getElementById("tableBody");
+  tbody.innerHTML = rows.map(n => `
+    <tr data-id="${n.id}" class="${n.id === selectedNodeId ? 'selected' : ''}">
+      <td title="${n.url}">${shortUrl(n.url)}</td>
+      <td title="${n.title}">${n.title || "—"}</td>
+      <td>${statusBadge(n.status_code)}</td>
+      <td>${n.depth}</td>
+      <td>${n.inlinks_count}</td>
+      <td>${n.outlinks_count}</td>
+    </tr>
+  `).join("");
+
+  tbody.querySelectorAll("tr").forEach(tr => {
+    tr.addEventListener("click", () => {
+      const id = parseInt(tr.dataset.id);
+      highlightNode(id);
+      selectTableRow(id);
+    });
+  });
+}
+
+function shortUrl(url) {
+  try {
+    const u = new URL(url);
+    const p = u.pathname + u.search;
+    return p.length > 40 ? p.slice(0, 40) + "…" : p || "/";
+  } catch { return url; }
+}
+
+function selectTableRow(id) {
+  selectedNodeId = id;
+  document.querySelectorAll("#tableBody tr").forEach(tr => {
+    tr.classList.toggle("selected", parseInt(tr.dataset.id) === id);
+  });
+  const sel = document.querySelector(`#tableBody tr[data-id="${id}"]`);
+  if (sel) sel.scrollIntoView({ block: "nearest" });
+}
+function clearTableSelection() {
+  selectedNodeId = null;
+  document.querySelectorAll("#tableBody tr").forEach(tr => tr.classList.remove("selected"));
+}
+
+/* ════════════════════════════════════════════
+   RENDER ALL
+════════════════════════════════════════════ */
+function renderAll() {
+  if (!graphData) return;
+  updateStats(graphData.nodes);
+  renderGraph(graphData);
+  renderTable();
+}
+
+/* ════════════════════════════════════════════
+   EVENTS
+════════════════════════════════════════════ */
+document.getElementById("btnStart").addEventListener("click", async () => {
+  const url = document.getElementById("urlInput").value.trim();
+  if (!url) return alert("Veuillez saisir une URL");
+  const maxUrls = parseInt(document.getElementById("maxUrls").value) || 200;
+  const delay   = parseFloat(document.getElementById("crawlDelay").value) || 0.5;
+
+  setBtnState(true);
+  document.getElementById("progressWrap").style.display = "flex";
+  document.getElementById("progressLabel").textContent = "Démarrage du crawl…";
+  document.getElementById("progressFill").style.width = "0%";
+
+  try {
+    const r = await fetch("/api/crawl", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url, max_urls: maxUrls, delay }),
+    });
+    const j = await r.json();
+    if (!r.ok) { alert(j.error); setBtnState(false); hideProgress(); }
+  } catch(e) {
+    alert("Impossible de contacter le serveur : " + e);
+    setBtnState(false); hideProgress();
+  }
+});
+
+document.getElementById("btnStop").addEventListener("click", async () => {
+  await fetch("/api/crawl/stop", { method: "POST" });
+});
+
+document.getElementById("btnLoad").addEventListener("click", () => {
+  document.getElementById("fileInput").click();
+});
+
+document.getElementById("fileInput").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const fd = new FormData();
+  fd.append("file", file);
+  const r = await fetch("/api/upload", { method: "POST", body: fd });
+  if (r.ok) { await fetchData(); }
+  else { const j = await r.json(); alert(j.error); }
+  e.target.value = "";
+});
+
+// Table sort
+document.querySelectorAll("thead th[data-col]").forEach(th => {
+  th.addEventListener("click", () => {
+    const col = th.dataset.col;
+    if (sortCol === col) sortDir *= -1;
+    else { sortCol = col; sortDir = -1; }
+    renderTable();
+  });
+});
+
+// Filters
+["filterSearch", "filterStatus", "filterDepth"].forEach(id => {
+  document.getElementById(id).addEventListener("input", renderTable);
+  document.getElementById(id).addEventListener("change", renderTable);
+});
+
+/* ════════════════════════════════════════════
+   INIT
+════════════════════════════════════════════ */
+connectWS();
+fetchData();
+</script>
+</body>
+</html>
