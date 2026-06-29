@@ -199,21 +199,28 @@ class SEOCrawler:
             if body:
                 page.word_count = len(body.get_text(separator=" ").split())
 
-            link_soup = soup
             if self.config.get("exclude_nav_footer", False):
-                import copy
-                link_soup = copy.copy(soup)
-                NAV_SELECTORS = [
-                    "nav", "header", "footer",
-                    "[role='navigation']", "[role='banner']", "[role='contentinfo']",
-                ]
-                for sel in NAV_SELECTORS:
-                    for tag in link_soup.select(sel):
+                # Re-parse fresh to safely mutate the tree
+                link_soup = BeautifulSoup(resp.text, "html.parser")
+                # Semantic elements
+                for tag in link_soup.find_all(["nav", "header", "footer"]):
+                    tag.decompose()
+                # ARIA roles
+                for role in ("navigation", "banner", "contentinfo"):
+                    for tag in link_soup.find_all(attrs={"role": role}):
                         tag.decompose()
-                # Also remove common class-based menus
-                for cls in ("menu", "nav", "navigation", "header", "footer", "sidebar", "breadcrumb"):
-                    for tag in link_soup.find_all(class_=lambda c: c and cls in c.lower().split()):
-                        tag.decompose()
+                # Class-based (BS4 returns class as a list)
+                NAV_CLASSES = {"menu", "nav", "navigation", "header", "footer",
+                               "sidebar", "breadcrumb", "top-bar", "topbar", "menubar"}
+                for tag in link_soup.find_all(class_=True):
+                    tag_classes = {c.lower() for c in tag.get("class", [])}
+                    if tag_classes & NAV_CLASSES:
+                        try:
+                            tag.decompose()
+                        except Exception:
+                            pass
+            else:
+                link_soup = soup
 
             links = set()
             for a in link_soup.find_all("a", href=True):
