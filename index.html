@@ -180,6 +180,49 @@
     .ac-url { color:var(--accent); font-size:11px; }
     .ac-title { color:var(--text); }
 
+    /* ══ MULTI-PAGE VIEW ══ */
+    #coconMulti { display:none; flex:1; flex-direction:row; overflow:hidden; }
+    #multiLeft { width:280px; background:var(--surface); border-right:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; flex-shrink:0; }
+    #multiLeftHeader { padding:10px 14px; border-bottom:1px solid var(--border); flex-shrink:0; }
+    #multiLeftHeader h3 { font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:8px; }
+    #multiSearch { width:100%; background:var(--surface2); border:1px solid var(--border); color:var(--text); padding:6px 10px; border-radius:6px; font-size:12px; outline:none; }
+    #multiSearch:focus { border-color:var(--accent); }
+    #multiSelList { flex:1; overflow-y:auto; padding:6px; }
+    .multi-sel-item { display:flex; align-items:center; gap:6px; padding:6px 8px; border-radius:6px; margin-bottom:4px; background:var(--surface2); border:1px solid var(--border); font-size:12px; }
+    .multi-sel-item .item-url { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text); }
+    .multi-sel-item .item-title { font-size:10px; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .multi-sel-item .item-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+    .multi-sel-remove { background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:14px; padding:0 2px; line-height:1; flex-shrink:0; }
+    .multi-sel-remove:hover { color:var(--err); opacity:1; }
+    #multiLeftFooter { padding:8px 14px; border-top:1px solid var(--border); display:flex; gap:6px; flex-shrink:0; }
+    #btnMultiClear { flex:1; background:var(--surface2); color:var(--text-muted); border:1px solid var(--border); font-size:12px; padding:5px; }
+    #btnMultiRender { flex:2; background:var(--accent); color:#fff; font-size:12px; padding:5px; }
+    #multiRight { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+    #multiGraphArea { flex:1; position:relative; }
+    #multiCanvas { width:100%; height:100%; display:block; }
+    #multiEmpty { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; pointer-events:none; }
+    #multiEmpty .icon { font-size:40px; opacity:.2; }
+    #multiEmpty p { color:var(--text-muted); font-size:13px; text-align:center; max-width:260px; }
+    #multiStats { padding:8px 16px; border-top:1px solid var(--border); background:var(--surface); display:flex; gap:20px; align-items:center; flex-shrink:0; font-size:12px; flex-wrap:wrap; }
+    .multi-stat { display:flex; flex-direction:column; gap:1px; }
+    .multi-stat-val { font-weight:700; font-size:15px; }
+    .multi-stat-lbl { font-size:10px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; }
+    #multiLegend { margin-left:auto; display:flex; gap:10px; align-items:center; font-size:11px; color:var(--text-muted); }
+    .leg-dot { width:9px; height:9px; border-radius:50%; display:inline-block; margin-right:3px; }
+
+    /* Sub-nav in cocon tab */
+    #coconSubNav { background:var(--surface2); border-bottom:1px solid var(--border); display:flex; padding:0 14px; gap:2px; flex-shrink:0; }
+    .sub-tab-btn { padding:7px 14px; background:none; border:none; color:var(--text-muted); font-size:12px; font-weight:600; cursor:pointer; border-bottom:2px solid transparent; border-radius:0; transition:color .15s; }
+    .sub-tab-btn:hover { color:var(--text); opacity:1; }
+    .sub-tab-btn.active { color:var(--accent2); border-bottom-color:var(--accent2); }
+
+    /* Autocomplete shared */
+    #coconAutocomplete, #multiAutocomplete { position:fixed; background:var(--surface); border:1px solid var(--border); border-radius:6px; z-index:300; max-height:200px; overflow-y:auto; box-shadow:0 8px 24px #0008; display:none; }
+    .ac-item { padding:7px 12px; cursor:pointer; font-size:12px; }
+    .ac-item:hover { background:var(--surface2); }
+    .ac-url { color:var(--accent); font-size:11px; }
+    .ac-title { color:var(--text); }
+
     ::-webkit-scrollbar{width:5px;} ::-webkit-scrollbar-track{background:var(--surface);} ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
   </style>
 </head>
@@ -296,7 +339,13 @@
 <!-- ══ TAB: COCON ══ -->
 <div id="tab-cocon">
 
-  <!-- Left: dashboard + detail -->
+  <!-- Sub-nav -->
+  <div id="coconSubNav">
+    <button class="sub-tab-btn active" data-subtab="dashboard">📊 Tableau de bord</button>
+    <button class="sub-tab-btn" data-subtab="multi">🗺️ Analyse multi-pages</button>
+  </div>
+
+  <!-- Left: dashboard + detail + multi -->
   <div id="coconLeft">
 
     <!-- Dashboard (default view) -->
@@ -343,6 +392,41 @@
       <div id="coconQuality"></div>
     </div>
 
+    <!-- Multi-page view -->
+    <div id="coconMulti">
+      <div id="multiLeft">
+        <div id="multiLeftHeader">
+          <h3>Pages sélectionnées (<span id="multiCount">0</span>)</h3>
+          <input id="multiSearch" type="text" placeholder="Ajouter une page…" autocomplete="off" />
+        </div>
+        <div id="multiSelList"></div>
+        <div id="multiLeftFooter">
+          <button id="btnMultiClear">✕ Effacer tout</button>
+          <button id="btnMultiRender">⚡ Visualiser le cocon</button>
+        </div>
+      </div>
+      <div id="multiRight">
+        <div id="multiGraphArea">
+          <canvas id="multiCanvas"></canvas>
+          <div id="multiEmpty">
+            <div class="icon">🗺️</div>
+            <p>Ajoutez des pages à gauche puis cliquez sur "Visualiser le cocon"</p>
+          </div>
+        </div>
+        <div id="multiStats" style="display:none">
+          <div class="multi-stat"><span class="multi-stat-val" id="ms-pages">0</span><span class="multi-stat-lbl">Pages</span></div>
+          <div class="multi-stat"><span class="multi-stat-val s-acc" id="ms-edges">0</span><span class="multi-stat-lbl">Liens éditoriaux</span></div>
+          <div class="multi-stat"><span class="multi-stat-val s-warn" id="ms-isolated">0</span><span class="multi-stat-lbl">Pages isolées</span></div>
+          <div class="multi-stat"><span class="multi-stat-val s-ok" id="ms-connected">0</span><span class="multi-stat-lbl">Pages connectées</span></div>
+          <div id="multiLegend">
+            <span><span class="leg-dot" style="background:#22c55e"></span>Hub (≥3 in)</span>
+            <span><span class="leg-dot" style="background:#56cfb2"></span>Connectée</span>
+            <span><span class="leg-dot" style="background:#f59e0b"></span>Isolée</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <!-- Right: inlinks/outlinks lists -->
@@ -372,8 +456,9 @@
   </div>
 </div>
 
-<!-- Autocomplete dropdown -->
+<!-- Autocomplete dropdowns -->
 <div id="coconAutocomplete"></div>
+<div id="multiAutocomplete"></div>
 
 <script>
 /* ═══════════════════════════ STATE ═══════════════════════════ */
@@ -1077,11 +1162,356 @@ document.getElementById("btnBackCocon").addEventListener("click",()=>{
 });
 document.getElementById("btnExportCSV").addEventListener("click",exportCSV);
 
+/* ═══════════════════════════ COCON SUB-NAV ═══════════════════════════ */
+function switchCoconSubTab(name) {
+  document.querySelectorAll(".sub-tab-btn").forEach(b => b.classList.toggle("active", b.dataset.subtab === name));
+  const showDash  = name === "dashboard";
+  const showMulti = name === "multi";
+  document.getElementById("coconDashboard").style.display = showDash ? "flex" : "none";
+  document.getElementById("coconDetail").style.display    = "none";
+  document.getElementById("coconMulti").style.display     = showMulti ? "flex" : "none";
+  // hide right panel in multi mode (not needed)
+  document.getElementById("coconRight").style.display     = showMulti ? "none" : "flex";
+  if (showDash) renderCoconDashboard();
+}
+
+document.querySelectorAll(".sub-tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => switchCoconSubTab(btn.dataset.subtab));
+});
+
+/* ═══════════════════════════ MULTI-PAGE STATE ═══════════════════════════ */
+let coconSelection = []; // array of node ids (unique)
+let multiTransform = d3.zoomIdentity;
+let multiHoveredId = null;
+let multiSimRef = null; // keep sim reference to stop it
+
+const MULTI_COLORS = {
+  hub:       "#22c55e",  // ≥3 within-selection inlinks
+  connected: "#56cfb2",  // 1-2 within-selection inlinks
+  isolated:  "#f59e0b",  // 0 within-selection inlinks
+};
+
+function multiNodeColor(withinIn) {
+  if (withinIn >= 3) return MULTI_COLORS.hub;
+  if (withinIn >= 1) return MULTI_COLORS.connected;
+  return MULTI_COLORS.isolated;
+}
+
+/* ── Selection management ── */
+function addToSelection(nodeId) {
+  if (coconSelection.includes(nodeId)) return;
+  coconSelection.push(nodeId);
+  renderSelectionList();
+}
+
+function removeFromSelection(nodeId) {
+  coconSelection = coconSelection.filter(id => id !== nodeId);
+  renderSelectionList();
+}
+
+function clearSelection() {
+  coconSelection = [];
+  renderSelectionList();
+  resetMultiGraph();
+}
+
+function renderSelectionList() {
+  document.getElementById("multiCount").textContent = coconSelection.length;
+  const list = document.getElementById("multiSelList");
+
+  // Compute within-selection inlinks for coloring chips
+  const selSet = new Set(coconSelection);
+  const withinIn = {};
+  coconSelection.forEach(id => withinIn[id] = 0);
+  coconSelection.forEach(id => {
+    const node = coconIndex?.nodeById[id];
+    (node?.content_link_ids || []).forEach(tid => {
+      if (selSet.has(tid)) withinIn[tid] = (withinIn[tid] || 0) + 1;
+    });
+  });
+
+  list.innerHTML = coconSelection.map(id => {
+    const n = coconIndex?.nodeById[id];
+    if (!n) return "";
+    const color = multiNodeColor(withinIn[id] || 0);
+    return `
+      <div class="multi-sel-item">
+        <div class="item-dot" style="background:${color}"></div>
+        <div style="flex:1;overflow:hidden">
+          <div class="item-url" title="${n.url}">${shortUrl(n.url)}</div>
+          <div class="item-title">${n.title || "—"}</div>
+        </div>
+        <button class="multi-sel-remove" data-id="${id}" title="Retirer">✕</button>
+      </div>`;
+  }).join("");
+
+  list.querySelectorAll(".multi-sel-remove").forEach(btn => {
+    btn.addEventListener("click", () => removeFromSelection(parseInt(btn.dataset.id)));
+  });
+}
+
+function resetMultiGraph() {
+  if (multiSimRef) { multiSimRef.stop(); multiSimRef = null; }
+  const canvas = document.getElementById("multiCanvas");
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  document.getElementById("multiEmpty").style.display = "flex";
+  document.getElementById("multiStats").style.display = "none";
+}
+
+/* ── Multi graph rendering ── */
+function renderMultiGraph() {
+  if (!coconIndex || coconSelection.length === 0) return;
+  if (multiSimRef) { multiSimRef.stop(); multiSimRef = null; }
+
+  const canvas = document.getElementById("multiCanvas");
+  const area   = document.getElementById("multiGraphArea");
+  canvas.width  = area.clientWidth;
+  canvas.height = area.clientHeight;
+  document.getElementById("multiEmpty").style.display = "none";
+
+  const selSet = new Set(coconSelection);
+
+  // Build nodes
+  const nodes = coconSelection
+    .map(id => ({ ...coconIndex.nodeById[id] }))
+    .filter(n => n && n.url);
+
+  // Build edges (content links between selected nodes only)
+  const edges = [];
+  nodes.forEach(n => {
+    (n.content_link_ids || []).forEach(tid => {
+      if (selSet.has(tid) && tid !== n.id) {
+        edges.push({ source: n.id, target: tid });
+      }
+    });
+  });
+
+  // Compute within-selection inlinks
+  const withinIn = {};
+  nodes.forEach(n => withinIn[n.id] = 0);
+  edges.forEach(e => { withinIn[e.target] = (withinIn[e.target] || 0) + 1; });
+
+  // Stats
+  const isolated  = nodes.filter(n => withinIn[n.id] === 0).length;
+  const connected = nodes.length - isolated;
+  document.getElementById("ms-pages").textContent    = nodes.length;
+  document.getElementById("ms-edges").textContent    = edges.length;
+  document.getElementById("ms-isolated").textContent = isolated;
+  document.getElementById("ms-connected").textContent= connected;
+  document.getElementById("multiStats").style.display = "flex";
+
+  // Node radius: larger = more within-selection inlinks
+  const maxIn = Math.max(1, ...Object.values(withinIn));
+  const nr = n => Math.max(10, Math.min(28, 10 + (withinIn[n.id] || 0) / maxIn * 18));
+
+  // D3 force
+  const simNodes = nodes.map(n => ({ ...n }));
+  const nodeMap  = {};
+  simNodes.forEach(n => nodeMap[n.id] = n);
+  const simEdges = edges
+    .map(e => ({ source: nodeMap[e.source], target: nodeMap[e.target] }))
+    .filter(e => e.source && e.target);
+
+  const sim = d3.forceSimulation(simNodes)
+    .force("link",      d3.forceLink(simEdges).id(d => d.id).distance(130).strength(0.5))
+    .force("charge",    d3.forceManyBody().strength(-400))
+    .force("center",    d3.forceCenter(canvas.width / 2, canvas.height / 2))
+    .force("collision", d3.forceCollide(d => nr(d) + 6));
+
+  multiSimRef = sim;
+  multiTransform = d3.zoomIdentity;
+
+  // Zoom
+  const zoom = d3.zoom().scaleExtent([0.05, 8]).on("zoom", e => {
+    multiTransform = e.transform;
+    draw();
+  });
+  d3.select(canvas).on(".zoom", null).call(zoom);
+
+  function draw() {
+    const ctx = canvas.getContext("2d");
+    const t = multiTransform;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
+    ctx.translate(t.x, t.y);
+    ctx.scale(t.k, t.k);
+
+    // Edges
+    for (const e of simEdges) {
+      if (!e.source.x || !e.target.x) continue;
+      const dx = e.target.x - e.source.x;
+      const dy = e.target.y - e.source.y;
+      const dist = Math.sqrt(dx*dx + dy*dy) || 1;
+      const r = nr(e.target);
+      const ax = e.target.x - (dx / dist) * (r + 6 / t.k);
+      const ay = e.target.y - (dy / dist) * (r + 6 / t.k);
+      const angle = Math.atan2(dy, dx);
+
+      ctx.beginPath();
+      ctx.moveTo(e.source.x, e.source.y);
+      ctx.lineTo(ax, ay);
+      ctx.strokeStyle = "#56cfb2";
+      ctx.globalAlpha = 0.5;
+      ctx.lineWidth   = 1.5 / t.k;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+
+      // Arrow
+      ctx.beginPath();
+      ctx.moveTo(ax, ay);
+      ctx.lineTo(ax - Math.cos(angle - 0.4) * 9 / t.k, ay - Math.sin(angle - 0.4) * 9 / t.k);
+      ctx.lineTo(ax - Math.cos(angle + 0.4) * 9 / t.k, ay - Math.sin(angle + 0.4) * 9 / t.k);
+      ctx.closePath();
+      ctx.fillStyle = "#56cfb2";
+      ctx.fill();
+    }
+
+    // Nodes
+    for (const n of simNodes) {
+      const r = nr(n);
+      const color = multiNodeColor(withinIn[n.id] || 0);
+      const isHov = n.id === multiHoveredId;
+
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, r, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.globalAlpha = 0.88;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      if (isHov) {
+        ctx.strokeStyle = "#fff";
+        ctx.lineWidth   = 2.5 / t.k;
+        ctx.stroke();
+      }
+
+      // Label
+      const label = shortUrl(n.url);
+      ctx.font = `${Math.max(9, 11 / t.k)}px 'Segoe UI',sans-serif`;
+      ctx.fillStyle   = "#e2e8f0";
+      ctx.globalAlpha = 0.85;
+      ctx.textAlign   = "center";
+      ctx.fillText(label, n.x, n.y + r + 12 / t.k);
+      ctx.globalAlpha = 1;
+    }
+
+    ctx.restore();
+  }
+
+  sim.on("tick", draw);
+
+  // Interaction
+  const tooltip = document.getElementById("tooltip");
+  function hitTest(mx, my) {
+    const wx = (mx - multiTransform.x) / multiTransform.k;
+    const wy = (my - multiTransform.y) / multiTransform.k;
+    for (const n of simNodes) {
+      const r = nr(n);
+      if ((wx - n.x)**2 + (wy - n.y)**2 <= r * r) return n;
+    }
+    return null;
+  }
+
+  canvas.addEventListener("mousemove", e => {
+    const rect = canvas.getBoundingClientRect();
+    const found = hitTest(e.clientX - rect.left, e.clientY - rect.top);
+    multiHoveredId = found?.id ?? null;
+    if (found) {
+      tooltip.classList.add("visible");
+      document.getElementById("tt-url").textContent      = found.url;
+      document.getElementById("tt-title").textContent    = found.title || "(sans titre)";
+      document.getElementById("tt-status").textContent   = found.status_code || "—";
+      document.getElementById("tt-depth").textContent    = found.depth ?? "—";
+      document.getElementById("tt-inlinks").textContent  = `${withinIn[found.id] || 0} (dans sélection)`;
+      document.getElementById("tt-outlinks").textContent = `${(found.content_link_ids||[]).filter(id=>selSet.has(id)).length} (dans sélection)`;
+      document.getElementById("tt-words").textContent    = (found.word_count || 0).toLocaleString();
+      document.getElementById("tt-h1").textContent       = (found.h1 || []).join(" / ") || "—";
+      tooltip.style.left = (e.clientX + 16) + "px";
+      tooltip.style.top  = (e.clientY - 10) + "px";
+    } else {
+      tooltip.classList.remove("visible");
+    }
+    draw();
+  });
+
+  canvas.addEventListener("mouseleave", () => {
+    tooltip.classList.remove("visible");
+    multiHoveredId = null;
+    draw();
+  });
+
+  // Click = navigate to detail (switch sub-tab)
+  canvas.addEventListener("click", e => {
+    const rect = canvas.getBoundingClientRect();
+    const found = hitTest(e.clientX - rect.left, e.clientY - rect.top);
+    if (found) {
+      switchCoconSubTab("dashboard");
+      openCoconDetail(found.id);
+    }
+  });
+
+  // Resize
+  new ResizeObserver(() => {
+    canvas.width  = area.clientWidth;
+    canvas.height = area.clientHeight;
+    sim.force("center", d3.forceCenter(canvas.width / 2, canvas.height / 2));
+    draw();
+  }).observe(area);
+}
+
+/* ── Multi autocomplete ── */
+function setupMultiAutocomplete() {
+  const input    = document.getElementById("multiSearch");
+  const dropdown = document.getElementById("multiAutocomplete");
+
+  input.addEventListener("input", () => {
+    const q = input.value.toLowerCase().trim();
+    dropdown.innerHTML = "";
+    if (!q || !graphData) { dropdown.style.display = "none"; return; }
+
+    const already = new Set(coconSelection);
+    const matches = graphData.nodes
+      .filter(n => !already.has(n.id) &&
+        (n.url.toLowerCase().includes(q) || n.title.toLowerCase().includes(q)))
+      .slice(0, 12);
+
+    if (!matches.length) { dropdown.style.display = "none"; return; }
+
+    matches.forEach(n => {
+      const div = document.createElement("div");
+      div.className = "ac-item";
+      div.innerHTML = `<div class="ac-title">${n.title || "(sans titre)"}</div><div class="ac-url">${shortUrl(n.url)}</div>`;
+      div.addEventListener("click", () => {
+        addToSelection(n.id);
+        input.value = "";
+        dropdown.style.display = "none";
+      });
+      dropdown.appendChild(div);
+    });
+
+    const rect = input.getBoundingClientRect();
+    dropdown.style.left  = rect.left + "px";
+    dropdown.style.top   = (rect.bottom + 4) + "px";
+    dropdown.style.width = rect.width + "px";
+    dropdown.style.display = "block";
+  });
+
+  document.addEventListener("click", e => {
+    if (!dropdown.contains(e.target) && e.target !== input)
+      dropdown.style.display = "none";
+  });
+}
+
+document.getElementById("btnMultiRender").addEventListener("click", renderMultiGraph);
+document.getElementById("btnMultiClear").addEventListener("click", clearSelection);
+
 /* ═══════════════════════════ INIT ═══════════════════════════ */
 loadPrefs();
 connectWS();
 fetchData();
 setupAutocomplete();
+setupMultiAutocomplete();
 </script>
 </body>
 </html>
