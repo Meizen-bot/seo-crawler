@@ -7,116 +7,180 @@
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <style>
     :root {
-      --bg: #0f1117; --surface: #1a1d27; --surface2: #22263a;
-      --border: #2e3250; --text: #e2e8f0; --text-muted: #8892b0;
-      --accent: #7c6cff; --accent2: #56cfb2;
-      --ok: #22c55e; --warn: #f59e0b; --err: #ef4444;
+      --bg:#0f1117; --surface:#1a1d27; --surface2:#22263a;
+      --border:#2e3250; --text:#e2e8f0; --text-muted:#8892b0;
+      --accent:#7c6cff; --accent2:#56cfb2;
+      --ok:#22c55e; --warn:#f59e0b; --err:#ef4444;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 13px; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { background:var(--bg); color:var(--text); font-family:'Segoe UI',system-ui,sans-serif; font-size:13px; display:flex; flex-direction:column; height:100vh; overflow:hidden; }
 
-    /* ── TOP BAR ── */
-    #topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 8px 14px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; flex-shrink: 0; }
-    #topbar h1 { font-size: 14px; font-weight: 700; color: var(--accent); white-space: nowrap; }
-    #topbar h1 span { color: var(--accent2); }
-    #urlInput { flex: 1; min-width: 200px; background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 6px 10px; border-radius: 6px; font-size: 13px; outline: none; }
-    #urlInput:focus { border-color: var(--accent); }
-    .cfg-row { display: flex; gap: 6px; align-items: center; }
-    .cfg-row label { color: var(--text-muted); font-size: 12px; white-space: nowrap; }
-    .cfg-row input[type=number] { width: 64px; background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 5px 7px; border-radius: 6px; font-size: 12px; outline: none; }
-    button { padding: 6px 14px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; transition: opacity .15s; }
-    button:hover { opacity: .85; }
-    #btnStart { background: var(--accent); color: #fff; }
-    #btnStop  { background: var(--err); color: #fff; display: none; }
-    #btnLoad  { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
-    #btnOptions { background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border); font-size: 12px; }
-    #btnOptions.open { color: var(--accent); border-color: var(--accent); }
-    #fileInput { display: none; }
+    /* TOP BAR */
+    #topbar { background:var(--surface); border-bottom:1px solid var(--border); padding:8px 14px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; flex-shrink:0; }
+    #topbar h1 { font-size:14px; font-weight:700; color:var(--accent); white-space:nowrap; }
+    #topbar h1 span { color:var(--accent2); }
+    #urlInput { flex:1; min-width:200px; background:var(--surface2); border:1px solid var(--border); color:var(--text); padding:6px 10px; border-radius:6px; font-size:13px; outline:none; }
+    #urlInput:focus { border-color:var(--accent); }
+    .cfg-row { display:flex; gap:6px; align-items:center; }
+    .cfg-row label { color:var(--text-muted); font-size:12px; white-space:nowrap; }
+    .cfg-row input[type=number] { width:64px; background:var(--surface2); border:1px solid var(--border); color:var(--text); padding:5px 7px; border-radius:6px; font-size:12px; outline:none; }
+    button { padding:6px 14px; border-radius:6px; border:none; cursor:pointer; font-size:13px; font-weight:600; transition:opacity .15s; }
+    button:hover { opacity:.85; }
+    #btnStart { background:var(--accent); color:#fff; }
+    #btnStop  { background:var(--err); color:#fff; display:none; }
+    #btnLoad  { background:var(--surface2); color:var(--text); border:1px solid var(--border); }
+    #btnOptions { background:var(--surface2); color:var(--text-muted); border:1px solid var(--border); font-size:12px; }
+    #btnOptions.open { color:var(--accent); border-color:var(--accent); }
+    #fileInput { display:none; }
 
-    /* ── OPTIONS PANEL ── */
-    #optionsPanel { background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px 16px; display: none; flex-shrink: 0; }
-    #optionsPanel.open { display: block; }
-    .opt-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
-    .opt-section h3 { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
-    .toggle-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; cursor: pointer; }
-    .toggle-row input[type=checkbox] { accent-color: var(--accent); width: 14px; height: 14px; cursor: pointer; }
-    .toggle-row label { font-size: 12px; cursor: pointer; }
-    textarea.opt-ta { width: 100%; background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 6px 8px; border-radius: 5px; font-size: 11px; font-family: monospace; resize: vertical; outline: none; min-height: 60px; }
-    textarea.opt-ta:focus { border-color: var(--accent); }
-    .opt-ta-lbl { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; display: block; }
+    /* OPTIONS PANEL */
+    #optionsPanel { background:var(--surface); border-bottom:1px solid var(--border); padding:12px 16px; display:none; flex-shrink:0; }
+    #optionsPanel.open { display:block; }
+    .opt-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px; }
+    .opt-section h3 { font-size:11px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:8px; }
+    .toggle-row { display:flex; align-items:center; gap:8px; margin-bottom:6px; cursor:pointer; }
+    .toggle-row input[type=checkbox] { accent-color:var(--accent); width:14px; height:14px; cursor:pointer; }
+    .toggle-row label { font-size:12px; cursor:pointer; }
+    textarea.opt-ta { width:100%; background:var(--surface2); border:1px solid var(--border); color:var(--text); padding:6px 8px; border-radius:5px; font-size:11px; font-family:monospace; resize:vertical; outline:none; min-height:60px; }
+    textarea.opt-ta:focus { border-color:var(--accent); }
+    .opt-ta-lbl { font-size:11px; color:var(--text-muted); margin-bottom:4px; display:block; }
 
-    /* ── PROGRESS ── */
-    #progressWrap { background: var(--surface); border-bottom: 1px solid var(--border); padding: 6px 16px; display: none; flex-direction: column; gap: 4px; flex-shrink: 0; }
-    #progressBar { height: 4px; background: var(--border); border-radius: 4px; overflow: hidden; }
-    #progressFill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); width: 0%; transition: width .3s; }
-    #progressLabel { font-size: 11px; color: var(--text-muted); }
+    /* PROGRESS */
+    #progressWrap { background:var(--surface); border-bottom:1px solid var(--border); padding:6px 16px; display:none; flex-direction:column; gap:4px; flex-shrink:0; }
+    #progressBar { height:4px; background:var(--border); border-radius:4px; overflow:hidden; }
+    #progressFill { height:100%; background:linear-gradient(90deg,var(--accent),var(--accent2)); width:0%; transition:width .3s; }
+    #progressLabel { font-size:11px; color:var(--text-muted); }
 
-    /* ── STATS BAR ── */
-    #statsbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 5px 16px; display: flex; gap: 20px; align-items: center; flex-shrink: 0; flex-wrap: wrap; }
-    .stat { display: flex; flex-direction: column; align-items: center; }
-    .stat-val { font-size: 16px; font-weight: 700; }
-    .stat-lbl { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; }
-    .s-ok { color: var(--ok); } .s-warn { color: var(--warn); } .s-err { color: var(--err); } .s-acc { color: var(--accent2); } .s-muted { color: var(--text-muted); }
+    /* TAB BAR */
+    #tabbar { background:var(--surface); border-bottom:1px solid var(--border); display:flex; flex-shrink:0; }
+    .tab-btn { padding:9px 18px; background:none; border:none; color:var(--text-muted); font-size:13px; font-weight:600; cursor:pointer; border-bottom:2px solid transparent; border-radius:0; transition:color .15s; }
+    .tab-btn:hover { color:var(--text); opacity:1; }
+    .tab-btn.active { color:var(--accent); border-bottom-color:var(--accent); }
 
-    /* ── MAIN ── */
-    #main { display: flex; flex: 1; overflow: hidden; }
+    /* STATS BAR */
+    #statsbar { background:var(--surface); border-bottom:1px solid var(--border); padding:5px 16px; display:flex; gap:20px; align-items:center; flex-shrink:0; flex-wrap:wrap; }
+    .stat { display:flex; flex-direction:column; align-items:center; }
+    .stat-val { font-size:16px; font-weight:700; }
+    .stat-lbl { font-size:10px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; }
+    .s-ok{color:var(--ok);} .s-warn{color:var(--warn);} .s-err{color:var(--err);} .s-acc{color:var(--accent2);} .s-muted{color:var(--text-muted);}
 
-    /* ── GRAPH AREA ── */
-    #graphWrap { flex: 1; position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-    #graphCanvas { display: none; width: 100%; height: 100%; }
-    #graphEmpty { display: flex; flex-direction: column; align-items: center; gap: 10px; pointer-events: none; }
-    #graphEmpty .icon { font-size: 44px; opacity: .25; }
-    #graphEmpty p { color: var(--text-muted); font-size: 13px; text-align: center; max-width: 300px; }
+    /* MAIN (graph tab) */
+    #tab-graph { display:flex; flex-direction:column; flex:1; overflow:hidden; }
+    #tab-cocon { display:none; flex:1; overflow:hidden; }
 
-    /* Crawl live view */
-    #crawlLive { display: none; width: 100%; height: 100%; flex-direction: column; overflow: hidden; }
-    #crawlCounter { padding: 20px 24px 10px; }
-    #crawlCounter .big { font-size: 42px; font-weight: 700; color: var(--accent); }
-    #crawlCounter .sub { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
-    #liveTableWrap { flex: 1; overflow-y: auto; }
-    #liveTable { width: 100%; border-collapse: collapse; font-size: 12px; }
-    #liveTable th { background: var(--surface2); padding: 6px 10px; text-align: left; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; position: sticky; top: 0; }
-    #liveTable td { padding: 5px 10px; border-bottom: 1px solid var(--border); }
-    #liveTable tr:hover { background: var(--surface2); }
+    #main { display:flex; flex:1; overflow:hidden; }
 
-    /* Generate button */
-    #genGraphBtn { display: none; margin: 20px auto; padding: 12px 28px; background: var(--accent); color: #fff; border-radius: 8px; border: none; cursor: pointer; font-size: 14px; font-weight: 600; }
-    #genGraphBtn:hover { opacity: .85; }
+    /* GRAPH AREA */
+    #graphWrap { flex:1; position:relative; overflow:hidden; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+    #graphCanvas { display:none; width:100%; height:100%; }
+    #graphEmpty { display:flex; flex-direction:column; align-items:center; gap:10px; pointer-events:none; }
+    #graphEmpty .icon { font-size:44px; opacity:.25; }
+    #graphEmpty p { color:var(--text-muted); font-size:13px; text-align:center; max-width:300px; }
+    #crawlLive { display:none; width:100%; height:100%; flex-direction:column; overflow:hidden; }
+    #crawlCounter { padding:20px 24px 10px; }
+    #crawlCounter .big { font-size:42px; font-weight:700; color:var(--accent); }
+    #crawlCounter .sub { font-size:13px; color:var(--text-muted); margin-top:4px; }
+    #liveTableWrap { flex:1; overflow-y:auto; }
+    #liveTable { width:100%; border-collapse:collapse; font-size:12px; }
+    #liveTable th { background:var(--surface2); padding:6px 10px; text-align:left; font-size:11px; color:var(--text-muted); text-transform:uppercase; position:sticky; top:0; }
+    #liveTable td { padding:5px 10px; border-bottom:1px solid var(--border); }
+    #liveTable tr:hover { background:var(--surface2); }
+    #genGraphBtn { display:none; margin:20px auto; padding:12px 28px; background:var(--accent); color:#fff; border-radius:8px; border:none; cursor:pointer; font-size:14px; font-weight:600; }
+    #genGraphBtn:hover { opacity:.85; }
+    #graphControls { position:absolute; bottom:12px; left:12px; display:none; gap:8px; align-items:center; z-index:10; }
+    #graphControls.visible { display:flex; }
+    #graphControls select { background:var(--surface2); border:1px solid var(--border); color:var(--text); padding:5px 8px; border-radius:5px; font-size:12px; outline:none; }
+    #graphControls label { font-size:12px; color:var(--text-muted); }
 
-    /* Graph controls */
-    #graphControls { position: absolute; bottom: 12px; left: 12px; display: none; gap: 8px; align-items: center; z-index: 10; }
-    #graphControls.visible { display: flex; }
-    #graphControls select, #graphControls input { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 5px 8px; border-radius: 5px; font-size: 12px; outline: none; }
-    #graphControls label { font-size: 12px; color: var(--text-muted); }
+    /* TOOLTIP */
+    #tooltip { position:fixed; background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:10px 14px; pointer-events:none; opacity:0; transition:opacity .1s; max-width:300px; z-index:200; box-shadow:0 8px 32px #0008; }
+    #tooltip.visible { opacity:1; }
+    .tt-url { font-size:11px; color:var(--accent); word-break:break-all; margin-bottom:5px; }
+    .tt-title { font-weight:600; margin-bottom:7px; font-size:13px; }
+    .tt-grid { display:grid; grid-template-columns:auto 1fr; gap:2px 10px; font-size:12px; }
+    .tt-lbl{color:var(--text-muted);} .tt-val{color:var(--text);font-weight:500;}
 
-    /* ── TOOLTIP ── */
-    #tooltip { position: fixed; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; pointer-events: none; opacity: 0; transition: opacity .1s; max-width: 300px; z-index: 200; box-shadow: 0 8px 32px #0008; }
-    #tooltip.visible { opacity: 1; }
-    .tt-url { font-size: 11px; color: var(--accent); word-break: break-all; margin-bottom: 5px; }
-    .tt-title { font-weight: 600; margin-bottom: 7px; font-size: 13px; }
-    .tt-grid { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; font-size: 12px; }
-    .tt-lbl { color: var(--text-muted); } .tt-val { color: var(--text); font-weight: 500; }
+    /* SIDE PANEL (graph tab) */
+    #panel { width:420px; background:var(--surface); border-left:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; flex-shrink:0; }
+    #panelHeader { padding:8px 12px; border-bottom:1px solid var(--border); display:flex; gap:7px; flex-wrap:wrap; align-items:center; }
+    #panelHeader h2 { font-size:13px; font-weight:600; flex:1; }
+    select, #filterSearch { background:var(--surface2); border:1px solid var(--border); color:var(--text); padding:5px 7px; border-radius:5px; font-size:12px; outline:none; }
+    #filterSearch { flex:1; min-width:100px; }
+    #tableWrap { flex:1; overflow-y:auto; }
+    table { width:100%; border-collapse:collapse; }
+    thead th { background:var(--surface2); padding:6px 8px; text-align:left; font-size:11px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; cursor:pointer; position:sticky; top:0; user-select:none; white-space:nowrap; }
+    thead th:hover { color:var(--text); }
+    tbody tr { border-bottom:1px solid var(--border); cursor:pointer; transition:background .1s; }
+    tbody tr:hover { background:var(--surface2); }
+    tbody tr.selected { background:#7c6cff22; }
+    tbody td { padding:5px 8px; font-size:12px; max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .badge { display:inline-block; padding:2px 5px; border-radius:4px; font-size:11px; font-weight:700; }
+    .b-ok{background:#22c55e22;color:var(--ok);} .b-warn{background:#f59e0b22;color:var(--warn);}
+    .b-err{background:#ef444422;color:var(--err);} .b-unk{background:#8892b022;color:var(--text-muted);}
 
-    /* ── SIDE PANEL ── */
-    #panel { width: 420px; background: var(--surface); border-left: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0; }
-    #panelHeader { padding: 8px 12px; border-bottom: 1px solid var(--border); display: flex; gap: 7px; flex-wrap: wrap; align-items: center; }
-    #panelHeader h2 { font-size: 13px; font-weight: 600; flex: 1; }
-    select, #filterSearch { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 5px 7px; border-radius: 5px; font-size: 12px; outline: none; }
-    #filterSearch { flex: 1; min-width: 100px; }
-    #tableWrap { flex: 1; overflow-y: auto; }
-    table { width: 100%; border-collapse: collapse; }
-    thead th { background: var(--surface2); padding: 6px 8px; text-align: left; font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; cursor: pointer; position: sticky; top: 0; user-select: none; white-space: nowrap; }
-    thead th:hover { color: var(--text); }
-    tbody tr { border-bottom: 1px solid var(--border); cursor: pointer; transition: background .1s; }
-    tbody tr:hover { background: var(--surface2); }
-    tbody tr.selected { background: #7c6cff22; }
-    tbody td { padding: 5px 8px; font-size: 12px; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .badge { display: inline-block; padding: 2px 5px; border-radius: 4px; font-size: 11px; font-weight: 700; }
-    .b-ok { background: #22c55e22; color: var(--ok); }
-    .b-warn { background: #f59e0b22; color: var(--warn); }
-    .b-err { background: #ef444422; color: var(--err); }
-    .b-unk { background: #8892b022; color: var(--text-muted); }
-    ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-track { background: var(--surface); } ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    /* ══ COCON TAB ══ */
+    #tab-cocon { flex-direction:row; }
+
+    /* Cocon left panel */
+    #coconLeft { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+
+    /* Dashboard */
+    #coconDashboard { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+    #coconDashHeader { padding:10px 14px; border-bottom:1px solid var(--border); display:flex; gap:8px; align-items:center; flex-wrap:wrap; flex-shrink:0; background:var(--surface); }
+    #coconDashHeader h2 { font-size:13px; font-weight:600; flex:1; }
+    .filter-chip { padding:4px 10px; border-radius:20px; border:1px solid var(--border); background:var(--surface2); color:var(--text-muted); font-size:12px; cursor:pointer; transition:all .15s; }
+    .filter-chip.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+    #btnExportCSV { background:var(--surface2); color:var(--text-muted); border:1px solid var(--border); font-size:12px; padding:4px 10px; }
+    #coconSearch { background:var(--surface2); border:1px solid var(--border); color:var(--text); padding:5px 8px; border-radius:5px; font-size:12px; outline:none; width:160px; }
+    #coconTableWrap { flex:1; overflow-y:auto; }
+    #coconTable { width:100%; border-collapse:collapse; }
+    #coconTable thead th { background:var(--surface2); padding:6px 8px; text-align:left; font-size:11px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; cursor:pointer; position:sticky; top:0; user-select:none; white-space:nowrap; }
+    #coconTable thead th:hover { color:var(--text); }
+    #coconTable tbody tr { border-bottom:1px solid var(--border); cursor:pointer; transition:background .1s; }
+    #coconTable tbody tr:hover { background:var(--surface2); }
+    #coconTable tbody tr.selected { background:#7c6cff22; }
+    #coconTable tbody td { padding:5px 8px; font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:200px; }
+    #coconNoData { display:none; align-items:center; justify-content:center; flex:1; flex-direction:column; gap:12px; padding:40px; text-align:center; }
+    #coconNoData .icon { font-size:40px; opacity:.25; }
+    #coconNoData p { color:var(--text-muted); font-size:13px; }
+
+    /* Cocon detail */
+    #coconDetail { display:none; flex:1; flex-direction:column; overflow:hidden; }
+    #coconDetailHeader { padding:10px 14px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; flex-shrink:0; background:var(--surface); }
+    #btnBackCocon { background:var(--surface2); border:1px solid var(--border); color:var(--text-muted); font-size:12px; padding:4px 10px; }
+    #coconPageSearch { flex:1; background:var(--surface2); border:1px solid var(--border); color:var(--text); padding:6px 10px; border-radius:6px; font-size:13px; outline:none; }
+    #coconPageSearch:focus { border-color:var(--accent); }
+    #coconPageInfo { padding:8px 14px; border-bottom:1px solid var(--border); font-size:12px; color:var(--text-muted); flex-shrink:0; background:var(--surface); display:flex; gap:16px; }
+    #coconPageInfo strong { color:var(--text); }
+    #coconNavToggle { padding:4px 10px; background:var(--surface2); border:1px solid var(--border); color:var(--text-muted); font-size:11px; cursor:pointer; border-radius:5px; }
+    #coconNavToggle.active { color:var(--accent); border-color:var(--accent); }
+    #coconGraphArea { flex:1; position:relative; }
+    #coconCanvas { width:100%; height:100%; display:block; }
+    #coconQuality { padding:10px 14px; border-top:1px solid var(--border); background:var(--surface); flex-shrink:0; display:flex; gap:20px; align-items:center; flex-wrap:wrap; font-size:12px; }
+    .q-item { display:flex; flex-direction:column; gap:2px; }
+    .q-lbl { font-size:10px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; }
+    .q-val { font-weight:600; }
+    .q-warn { color:var(--warn); }
+    .q-ok   { color:var(--ok); }
+    .q-alert { color:var(--err); font-size:12px; font-weight:600; }
+
+    /* Cocon right panel */
+    #coconRight { width:300px; background:var(--surface); border-left:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; flex-shrink:0; }
+    .cocon-link-section { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+    .cocon-link-section + .cocon-link-section { border-top:1px solid var(--border); }
+    .cocon-link-header { padding:8px 12px; background:var(--surface2); font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--text-muted); flex-shrink:0; }
+    .cocon-link-list { flex:1; overflow-y:auto; }
+    .cocon-link-item { padding:7px 12px; border-bottom:1px solid var(--border); cursor:pointer; font-size:12px; transition:background .1s; }
+    .cocon-link-item:hover { background:var(--surface2); color:var(--accent2); }
+
+    /* Autocomplete */
+    #coconAutocomplete { position:fixed; background:var(--surface); border:1px solid var(--border); border-radius:6px; z-index:300; max-height:200px; overflow-y:auto; box-shadow:0 8px 24px #0008; display:none; }
+    .ac-item { padding:7px 12px; cursor:pointer; font-size:12px; }
+    .ac-item:hover { background:var(--surface2); }
+    .ac-url { color:var(--accent); font-size:11px; }
+    .ac-title { color:var(--text); }
+
+    ::-webkit-scrollbar{width:5px;} ::-webkit-scrollbar-track{background:var(--surface);} ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
   </style>
 </head>
 <body>
@@ -169,98 +233,132 @@
   <div id="progressBar"><div id="progressFill"></div></div>
 </div>
 
-<!-- STATS -->
-<div id="statsbar">
-  <div class="stat"><span class="stat-val" id="st-total">—</span><span class="stat-lbl">Pages</span></div>
-  <div class="stat"><span class="stat-val s-ok" id="st-200">—</span><span class="stat-lbl">200 OK</span></div>
-  <div class="stat"><span class="stat-val s-warn" id="st-3xx">—</span><span class="stat-lbl">3xx</span></div>
-  <div class="stat"><span class="stat-val s-err" id="st-err">—</span><span class="stat-lbl">Erreurs</span></div>
-  <div class="stat"><span class="stat-val s-acc" id="st-depth">—</span><span class="stat-lbl">Depth max</span></div>
-  <div class="stat"><span class="stat-val s-muted" id="st-robots">—</span><span class="stat-lbl">Bloquées robots</span></div>
+<!-- TAB BAR -->
+<div id="tabbar">
+  <button class="tab-btn active" data-tab="graph">📊 Graphe</button>
+  <button class="tab-btn" data-tab="cocon">🕸️ Cocon Sémantique</button>
 </div>
 
-<!-- MAIN -->
-<div id="main">
-  <div id="graphWrap">
+<!-- ══ TAB: GRAPH ══ -->
+<div id="tab-graph">
+  <!-- STATS -->
+  <div id="statsbar">
+    <div class="stat"><span class="stat-val" id="st-total">—</span><span class="stat-lbl">Pages</span></div>
+    <div class="stat"><span class="stat-val s-ok" id="st-200">—</span><span class="stat-lbl">200 OK</span></div>
+    <div class="stat"><span class="stat-val s-warn" id="st-3xx">—</span><span class="stat-lbl">3xx</span></div>
+    <div class="stat"><span class="stat-val s-err" id="st-err">—</span><span class="stat-lbl">Erreurs</span></div>
+    <div class="stat"><span class="stat-val s-acc" id="st-depth">—</span><span class="stat-lbl">Depth max</span></div>
+    <div class="stat"><span class="stat-val s-muted" id="st-robots">—</span><span class="stat-lbl">Bloquées robots</span></div>
+  </div>
 
-    <!-- Empty state -->
-    <div id="graphEmpty">
-      <div class="icon">🕸️</div>
-      <p>Lancez un crawl ou chargez un fichier JSON pour visualiser le graphe</p>
+  <div id="main">
+    <div id="graphWrap">
+      <div id="graphEmpty"><div class="icon">🕸️</div><p>Lancez un crawl ou chargez un fichier JSON pour visualiser le graphe</p></div>
+      <div id="crawlLive">
+        <div id="crawlCounter"><div class="big" id="liveCount">0</div><div class="sub" id="liveStatus">Pages crawlées…</div></div>
+        <div id="liveTableWrap"><table id="liveTable"><thead><tr><th>URL</th><th>Titre</th><th>Status</th><th>Depth</th></tr></thead><tbody id="liveBody"></tbody></table></div>
+      </div>
+      <button id="genGraphBtn">⚡ Générer le graphe</button>
+      <canvas id="graphCanvas"></canvas>
+      <div id="graphControls">
+        <label>Afficher les</label>
+        <select id="graphLimit"><option value="50">50</option><option value="100" selected>100</option><option value="250">250</option><option value="0">Tout</option></select>
+        <label>premières pages par</label>
+        <select id="graphSortBy"><option value="inlinks_count">Inlinks</option><option value="depth">Profondeur</option><option value="status_code">Status</option><option value="word_count">Mots</option></select>
+      </div>
     </div>
 
-    <!-- Live crawl view (no graph) -->
-    <div id="crawlLive">
-      <div id="crawlCounter">
-        <div class="big" id="liveCount">0</div>
-        <div class="sub" id="liveStatus">Pages crawlées…</div>
+    <div id="panel">
+      <div id="panelHeader">
+        <h2>Pages crawlées</h2>
+        <input id="filterSearch" type="search" placeholder="Filtrer…" />
+        <select id="filterStatus">
+          <option value="">Tous statuts</option><option value="200">200 OK</option>
+          <option value="3xx">3xx</option><option value="4xx">4xx</option>
+          <option value="5xx">5xx</option><option value="0">Erreur</option>
+        </select>
+        <select id="filterDepth"><option value="">Toutes depths</option></select>
       </div>
-      <div id="liveTableWrap">
-        <table id="liveTable">
-          <thead><tr><th>URL</th><th>Titre</th><th>Status</th><th>Depth</th></tr></thead>
-          <tbody id="liveBody"></tbody>
+      <div id="tableWrap">
+        <table><thead><tr>
+          <th data-col="url">URL <span>↕</span></th>
+          <th data-col="title">Titre <span>↕</span></th>
+          <th data-col="status_code">Status <span>↕</span></th>
+          <th data-col="depth">Depth <span>↕</span></th>
+          <th data-col="inlinks_count">In <span>↕</span></th>
+          <th data-col="outlinks_count">Out <span>↕</span></th>
+        </tr></thead><tbody id="tableBody"></tbody></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TAB: COCON ══ -->
+<div id="tab-cocon">
+
+  <!-- Left: dashboard + detail -->
+  <div id="coconLeft">
+
+    <!-- Dashboard (default view) -->
+    <div id="coconDashboard">
+      <div id="coconDashHeader">
+        <h2>Maillage éditorial</h2>
+        <input id="coconSearch" type="search" placeholder="Filtrer par URL…" />
+        <button class="filter-chip" id="chipOrph">Orphelines édito</button>
+        <button class="filter-chip" id="chipHubs">Hubs (≥5 out)</button>
+        <button class="filter-chip" id="chipAuth">Autorités (≥5 in)</button>
+        <button id="btnExportCSV">⬇ CSV</button>
+      </div>
+      <div id="coconNoData">
+        <div class="icon">📊</div>
+        <p id="coconNoDataMsg">Lancez un crawl pour activer l'analyse du cocon sémantique.</p>
+      </div>
+      <div id="coconTableWrap" style="display:none">
+        <table id="coconTable">
+          <thead><tr>
+            <th data-ccol="url">URL <span>↕</span></th>
+            <th data-ccol="title">Titre <span>↕</span></th>
+            <th data-ccol="content_inlinks">In édito <span>↕</span></th>
+            <th data-ccol="content_link_count">Out édito <span>↕</span></th>
+            <th data-ccol="ratio">Ratio <span>↕</span></th>
+          </tr></thead>
+          <tbody id="coconTableBody"></tbody>
         </table>
       </div>
     </div>
 
-    <!-- Generate graph button (shown after crawl) -->
-    <button id="genGraphBtn">⚡ Générer le graphe</button>
-
-    <!-- Canvas for graph -->
-    <canvas id="graphCanvas"></canvas>
-
-    <!-- Graph display controls -->
-    <div id="graphControls">
-      <label>Afficher les</label>
-      <select id="graphLimit">
-        <option value="50">50</option>
-        <option value="100" selected>100</option>
-        <option value="250">250</option>
-        <option value="0">Tout</option>
-      </select>
-      <label>premières pages par</label>
-      <select id="graphSortBy">
-        <option value="inlinks_count">Inlinks</option>
-        <option value="depth">Profondeur</option>
-        <option value="status_code">Status</option>
-        <option value="word_count">Mots</option>
-      </select>
+    <!-- Detail (page selected) -->
+    <div id="coconDetail">
+      <div id="coconDetailHeader">
+        <button id="btnBackCocon">← Retour</button>
+        <input id="coconPageSearch" type="text" placeholder="Rechercher une page du crawl…" autocomplete="off" />
+        <button id="coconNavToggle">Afficher liens nav</button>
+      </div>
+      <div id="coconPageInfo">
+        <span>Choisissez une page ci-dessus ou dans le tableau</span>
+      </div>
+      <div id="coconGraphArea">
+        <canvas id="coconCanvas"></canvas>
+      </div>
+      <div id="coconQuality"></div>
     </div>
+
   </div>
 
-  <!-- Side panel -->
-  <div id="panel">
-    <div id="panelHeader">
-      <h2>Pages crawlées</h2>
-      <input id="filterSearch" type="search" placeholder="Filtrer…" />
-      <select id="filterStatus">
-        <option value="">Tous statuts</option>
-        <option value="200">200 OK</option>
-        <option value="3xx">3xx</option>
-        <option value="4xx">4xx</option>
-        <option value="5xx">5xx</option>
-        <option value="0">Erreur</option>
-      </select>
-      <select id="filterDepth"><option value="">Toutes depths</option></select>
+  <!-- Right: inlinks/outlinks lists -->
+  <div id="coconRight">
+    <div class="cocon-link-section">
+      <div class="cocon-link-header">📥 Inlinks éditoriaux (<span id="cntInlinks">0</span>)</div>
+      <div class="cocon-link-list" id="coconInlinkList"></div>
     </div>
-    <div id="tableWrap">
-      <table>
-        <thead>
-          <tr>
-            <th data-col="url">URL <span>↕</span></th>
-            <th data-col="title">Titre <span>↕</span></th>
-            <th data-col="status_code">Status <span>↕</span></th>
-            <th data-col="depth">Depth <span>↕</span></th>
-            <th data-col="inlinks_count">In <span>↕</span></th>
-            <th data-col="outlinks_count">Out <span>↕</span></th>
-          </tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-      </table>
+    <div class="cocon-link-section">
+      <div class="cocon-link-header">📤 Outlinks éditoriaux (<span id="cntOutlinks">0</span>)</div>
+      <div class="cocon-link-list" id="coconOutlinkList"></div>
     </div>
   </div>
 </div>
 
+<!-- TOOLTIP -->
 <div id="tooltip">
   <div class="tt-url" id="tt-url"></div>
   <div class="tt-title" id="tt-title"></div>
@@ -274,43 +372,49 @@
   </div>
 </div>
 
+<!-- Autocomplete dropdown -->
+<div id="coconAutocomplete"></div>
+
 <script>
-/* ═══════════════════════════════════════════
-   STATE
-═══════════════════════════════════════════ */
-let graphData = null;          // full JSON from server
-let graphNodes = [];           // subset rendered in canvas
-let nodePositions = {};        // id → {x, y}
-let selectedNodeId = null;
-let hoveredNode = null;
+/* ═══════════════════════════ STATE ═══════════════════════════ */
+let graphData = null;
+let graphNodes = [], nodePositions = {};
+let selectedNodeId = null, hoveredNode = null;
 let sortCol = "inlinks_count", sortDir = -1;
 let canvasTransform = d3.zoomIdentity;
 let graphReady = false;
 let liveRows = [];
 
-/* ═══════════════════════════════════════════
-   HELPERS
-═══════════════════════════════════════════ */
-const statusColor = c => c === 200 ? "#22c55e" : c >= 300 && c < 400 ? "#f59e0b" : c >= 400 ? "#ef4444" : "#6b7280";
+// Cocon state
+let coconIndex = null;  // { nodeById, contentInlinks }
+let coconSelectedId = null;
+let coconShowNav = false;
+let coconTransform = d3.zoomIdentity;
+let coconSimNodes = [], coconSimEdges = [];
+let coconNodePos = {};
+let coconHoveredId = null;
+let coconSortCol = "content_inlinks", coconSortDir = -1;
+let coconChip = null; // "orphan" | "hub" | "auth" | null
+
+/* ═══════════════════════════ HELPERS ═══════════════════════════ */
+const statusColor = c => c===200?"#22c55e":c>=300&&c<400?"#f59e0b":c>=400?"#ef4444":"#6b7280";
 const statusBadge = c => {
-  if (c === 200) return `<span class="badge b-ok">200</span>`;
-  if (c >= 300 && c < 400) return `<span class="badge b-warn">${c}</span>`;
-  if (c >= 400) return `<span class="badge b-err">${c}</span>`;
-  return `<span class="badge b-unk">${c || "Err"}</span>`;
+  if(c===200) return `<span class="badge b-ok">200</span>`;
+  if(c>=300&&c<400) return `<span class="badge b-warn">${c}</span>`;
+  if(c>=400) return `<span class="badge b-err">${c}</span>`;
+  return `<span class="badge b-unk">${c||"Err"}</span>`;
 };
-const nodeRadius = n => {
-  const maxIn = Math.max(1, ...graphNodes.map(x => x.inlinks_count));
-  return Math.max(4, Math.min(22, 5 + (n.inlinks_count / maxIn) * 17));
+const nodeRadius = (n, nodes) => {
+  const maxIn = Math.max(1, ...nodes.map(x=>x.inlinks_count));
+  return Math.max(4, Math.min(22, 5+(n.inlinks_count/maxIn)*17));
 };
-const shortUrl = url => { try { const u = new URL(url); const p = u.pathname + u.search; return p.length > 38 ? p.slice(0, 38) + "…" : p || "/"; } catch { return url; } };
+const shortUrl = url => { try{const u=new URL(url);const p=u.pathname+u.search;return p.length>38?p.slice(0,38)+"…":p||"/";}catch{return url;} };
+const keywords = title => (title||"").toLowerCase().split(/\W+/).filter(w=>w.length>4);
 
-/* ═══════════════════════════════════════════
-   OPTIONS — localStorage persistence
-═══════════════════════════════════════════ */
+/* ═══════════════════════════ PREFS ═══════════════════════════ */
 const PREF_KEY = "seoCrawlerPrefs";
-
 function savePrefs() {
-  const prefs = {
+  localStorage.setItem(PREF_KEY, JSON.stringify({
     url: document.getElementById("urlInput").value,
     maxUrls: document.getElementById("maxUrls").value,
     delay: document.getElementById("crawlDelay").value,
@@ -318,559 +422,666 @@ function savePrefs() {
     filterExt: document.getElementById("optFilterExt").checked,
     stripParams: document.getElementById("optStripParams").checked,
     excludeNavFooter: document.getElementById("optExcludeNavFooter").checked,
-    sitemapMode: document.querySelector('input[name="sitemapMode"]:checked')?.value || "discover",
+    sitemapMode: document.querySelector('input[name="sitemapMode"]:checked')?.value||"discover",
     prefixes: document.getElementById("optPrefixes").value,
     keywords: document.getElementById("optKeywords").value,
-  };
-  localStorage.setItem(PREF_KEY, JSON.stringify(prefs));
+  }));
 }
-
 function loadPrefs() {
   try {
-    const p = JSON.parse(localStorage.getItem(PREF_KEY) || "{}");
-    if (p.url) document.getElementById("urlInput").value = p.url;
-    if (p.maxUrls) document.getElementById("maxUrls").value = p.maxUrls;
-    if (p.delay) document.getElementById("crawlDelay").value = p.delay;
-    if (p.robots !== undefined) document.getElementById("optRobots").checked = p.robots;
-    if (p.filterExt !== undefined) document.getElementById("optFilterExt").checked = p.filterExt;
-    if (p.stripParams !== undefined) document.getElementById("optStripParams").checked = p.stripParams;
-    if (p.excludeNavFooter !== undefined) document.getElementById("optExcludeNavFooter").checked = p.excludeNavFooter;
-    if (p.sitemapMode) { const r = document.querySelector(`input[name="sitemapMode"][value="${p.sitemapMode}"]`); if (r) r.checked = true; }
-    if (p.prefixes) document.getElementById("optPrefixes").value = p.prefixes;
-    if (p.keywords) document.getElementById("optKeywords").value = p.keywords;
-  } catch {}
+    const p = JSON.parse(localStorage.getItem(PREF_KEY)||"{}");
+    if(p.url) document.getElementById("urlInput").value=p.url;
+    if(p.maxUrls) document.getElementById("maxUrls").value=p.maxUrls;
+    if(p.delay) document.getElementById("crawlDelay").value=p.delay;
+    if(p.robots!==undefined) document.getElementById("optRobots").checked=p.robots;
+    if(p.filterExt!==undefined) document.getElementById("optFilterExt").checked=p.filterExt;
+    if(p.stripParams!==undefined) document.getElementById("optStripParams").checked=p.stripParams;
+    if(p.excludeNavFooter!==undefined) document.getElementById("optExcludeNavFooter").checked=p.excludeNavFooter;
+    if(p.sitemapMode){const r=document.querySelector(`input[name="sitemapMode"][value="${p.sitemapMode}"]`);if(r)r.checked=true;}
+    if(p.prefixes) document.getElementById("optPrefixes").value=p.prefixes;
+    if(p.keywords) document.getElementById("optKeywords").value=p.keywords;
+  } catch{}
 }
-
 function buildConfig() {
   return {
     respect_robots: document.getElementById("optRobots").checked,
     filter_extensions: document.getElementById("optFilterExt").checked,
     strip_params: document.getElementById("optStripParams").checked,
     exclude_nav_footer: document.getElementById("optExcludeNavFooter").checked,
-    sitemap_mode: document.querySelector('input[name="sitemapMode"]:checked')?.value || "discover",
+    sitemap_mode: document.querySelector('input[name="sitemapMode"]:checked')?.value||"discover",
     exclude_prefixes: document.getElementById("optPrefixes").value.split("\n").filter(Boolean),
     exclude_keywords: document.getElementById("optKeywords").value.split("\n").filter(Boolean),
   };
 }
+document.querySelectorAll("#optionsPanel input,#optionsPanel textarea,#urlInput,#maxUrls,#crawlDelay")
+  .forEach(el=>el.addEventListener("change",savePrefs));
 
-// Auto-save prefs on any change
-document.querySelectorAll("#optionsPanel input, #optionsPanel textarea, #urlInput, #maxUrls, #crawlDelay")
-  .forEach(el => el.addEventListener("change", savePrefs));
+/* ═══════════════════════════ TABS ═══════════════════════════ */
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    const tab = btn.dataset.tab;
+    document.getElementById("tab-graph").style.display = tab==="graph" ? "flex" : "none";
+    document.getElementById("tab-cocon").style.display = tab==="cocon" ? "flex" : "none";
+    if(tab==="cocon") renderCoconDashboard();
+  });
+});
 
-/* ═══════════════════════════════════════════
-   WEBSOCKET
-═══════════════════════════════════════════ */
+/* ═══════════════════════════ WEBSOCKET ═══════════════════════════ */
 let ws;
 function connectWS() {
-  const proto = location.protocol === "https:" ? "wss" : "ws";
+  const proto = location.protocol==="https:"?"wss":"ws";
   ws = new WebSocket(`${proto}://${location.host}/ws`);
   ws.onmessage = (evt) => {
     const msg = JSON.parse(evt.data);
-    if (msg.type === "progress") onProgress(msg);
-    else if (msg.type === "done") onCrawlDone(msg);
-    else if (msg.type === "error") { hideProgress(); setBtnState(false); showEmpty(); alert("Erreur : " + msg.message); }
-    else if (msg.type === "state" && msg.running) { setBtnState(true); showCrawlLive(); document.getElementById("progressWrap").style.display = "flex"; }
+    if(msg.type==="progress") onProgress(msg);
+    else if(msg.type==="done") onCrawlDone(msg);
+    else if(msg.type==="error"){ hideProgress(); setBtnState(false); showEmpty(); alert("Erreur : "+msg.message); }
+    else if(msg.type==="state"&&msg.running){ setBtnState(true); showCrawlLive(); document.getElementById("progressWrap").style.display="flex"; }
   };
   ws.onclose = () => setTimeout(connectWS, 3000);
 }
 
-/* ═══════════════════════════════════════════
-   CRAWL EVENTS
-═══════════════════════════════════════════ */
+/* ═══════════════════════════ CRAWL EVENTS ═══════════════════════════ */
 function onProgress(msg) {
-  document.getElementById("progressWrap").style.display = "flex";
-  const pct = msg.total_queued > 0 ? Math.min(100, (msg.crawled / msg.total_queued) * 100) : 0;
-  document.getElementById("progressFill").style.width = pct + "%";
-  const short = msg.current_url.length > 60 ? "…" + msg.current_url.slice(-60) : msg.current_url;
-  document.getElementById("progressLabel").textContent = `${msg.crawled} / ${msg.total_queued} pages — ${short}`;
-  document.getElementById("liveCount").textContent = msg.crawled;
-  document.getElementById("liveStatus").textContent = `pages crawlées — ${msg.robots_blocked || 0} bloquées robots.txt`;
-  document.getElementById("st-robots").textContent = msg.robots_blocked || 0;
+  document.getElementById("progressWrap").style.display="flex";
+  const pct = msg.total_queued>0?Math.min(100,(msg.crawled/msg.total_queued)*100):0;
+  document.getElementById("progressFill").style.width=pct+"%";
+  const short = msg.current_url.length>60?"…"+msg.current_url.slice(-60):msg.current_url;
+  document.getElementById("progressLabel").textContent=`${msg.crawled} / ${msg.total_queued} pages — ${short}`;
+  document.getElementById("liveCount").textContent=msg.crawled;
+  document.getElementById("liveStatus").textContent=`pages crawlées — ${msg.robots_blocked||0} bloquées robots.txt`;
+  document.getElementById("st-robots").textContent=msg.robots_blocked||0;
   addLiveRow(msg.current_url);
 }
-
-function onCrawlDone(msg) {
-  hideProgress();
-  setBtnState(false);
-  const stopped = msg.stopped;
-  hideCrawlLive();
-  fetchData(stopped);
-}
-
+function onCrawlDone(msg) { hideProgress(); setBtnState(false); hideCrawlLive(); fetchData(msg.stopped); }
 function addLiveRow(url) {
-  liveRows.unshift({ url });
-  if (liveRows.length > 200) liveRows.pop();
-  const tbody = document.getElementById("liveBody");
-  const short = shortUrl(url);
-  const tr = document.createElement("tr");
-  tr.innerHTML = `<td title="${url}">${short}</td><td>—</td><td>—</td><td>—</td>`;
+  const tbody=document.getElementById("liveBody");
+  const tr=document.createElement("tr");
+  tr.innerHTML=`<td title="${url}">${shortUrl(url)}</td><td>—</td><td>—</td><td>—</td>`;
   tbody.prepend(tr);
-  while (tbody.children.length > 200) tbody.removeChild(tbody.lastChild);
+  while(tbody.children.length>200) tbody.removeChild(tbody.lastChild);
 }
 
-/* ═══════════════════════════════════════════
-   VIEW STATE
-═══════════════════════════════════════════ */
-function showEmpty() {
-  document.getElementById("graphEmpty").style.display = "flex";
-  document.getElementById("crawlLive").style.display = "none";
-  document.getElementById("genGraphBtn").style.display = "none";
-  document.getElementById("graphCanvas").style.display = "none";
-  document.getElementById("graphControls").classList.remove("visible");
-  graphReady = false;
-}
-function showCrawlLive() {
-  document.getElementById("graphEmpty").style.display = "none";
-  document.getElementById("crawlLive").style.display = "flex";
-  document.getElementById("genGraphBtn").style.display = "none";
-  document.getElementById("graphCanvas").style.display = "none";
-  document.getElementById("graphControls").classList.remove("visible");
-  liveRows = [];
-  document.getElementById("liveBody").innerHTML = "";
-}
-function showGenButton(stopped) {
-  document.getElementById("graphEmpty").style.display = "none";
-  document.getElementById("crawlLive").style.display = "none";
-  const btn = document.getElementById("genGraphBtn");
-  btn.textContent = stopped
-    ? `⚡ Générer le graphe (${graphData.meta.total_pages} pages crawlées avant arrêt)`
-    : `⚡ Générer le graphe (${graphData.meta.total_pages} pages)`;
-  btn.style.display = "block";
-  document.getElementById("graphCanvas").style.display = "none";
-  document.getElementById("graphControls").classList.remove("visible");
-}
-function showCanvas() {
-  document.getElementById("graphEmpty").style.display = "none";
-  document.getElementById("crawlLive").style.display = "none";
-  document.getElementById("genGraphBtn").style.display = "none";
-  document.getElementById("graphCanvas").style.display = "block";
-  document.getElementById("graphControls").classList.add("visible");
-  graphReady = true;
-}
+/* ═══════════════════════════ VIEW STATE ═══════════════════════════ */
+function showEmpty(){ document.getElementById("graphEmpty").style.display="flex"; document.getElementById("crawlLive").style.display="none"; document.getElementById("genGraphBtn").style.display="none"; document.getElementById("graphCanvas").style.display="none"; document.getElementById("graphControls").classList.remove("visible"); graphReady=false; }
+function showCrawlLive(){ document.getElementById("graphEmpty").style.display="none"; document.getElementById("crawlLive").style.display="flex"; document.getElementById("genGraphBtn").style.display="none"; document.getElementById("graphCanvas").style.display="none"; document.getElementById("graphControls").classList.remove("visible"); document.getElementById("liveBody").innerHTML=""; }
+function showGenButton(stopped){ document.getElementById("graphEmpty").style.display="none"; document.getElementById("crawlLive").style.display="none"; const btn=document.getElementById("genGraphBtn"); btn.textContent=stopped?`⚡ Générer le graphe (${graphData.meta.total_pages} pages — arrêt manuel)`:`⚡ Générer le graphe (${graphData.meta.total_pages} pages)`; btn.style.display="block"; document.getElementById("graphCanvas").style.display="none"; document.getElementById("graphControls").classList.remove("visible"); }
+function showCanvas(){ document.getElementById("graphEmpty").style.display="none"; document.getElementById("crawlLive").style.display="none"; document.getElementById("genGraphBtn").style.display="none"; document.getElementById("graphCanvas").style.display="block"; document.getElementById("graphControls").classList.add("visible"); graphReady=true; }
+function setBtnState(r){ document.getElementById("btnStart").style.display=r?"none":""; document.getElementById("btnStop").style.display=r?"":"none"; }
+function hideProgress(){ document.getElementById("progressWrap").style.display="none"; }
+function hideCrawlLive(){ document.getElementById("crawlLive").style.display="none"; }
 
-function setBtnState(running) {
-  document.getElementById("btnStart").style.display = running ? "none" : "";
-  document.getElementById("btnStop").style.display  = running ? "" : "none";
-}
-function hideProgress() { document.getElementById("progressWrap").style.display = "none"; }
-function hideCrawlLive() { document.getElementById("crawlLive").style.display = "none"; }
-
-/* ═══════════════════════════════════════════
-   DATA
-═══════════════════════════════════════════ */
-async function fetchData(stopped = false) {
+/* ═══════════════════════════ DATA ═══════════════════════════ */
+async function fetchData(stopped=false) {
   try {
     const r = await fetch("/api/data");
-    if (!r.ok) { showEmpty(); return; }
+    if(!r.ok){ showEmpty(); return; }
     graphData = await r.json();
+    buildCoconIndex();
     updateStats(graphData.nodes, graphData.meta);
     renderTable();
-    showGenButton(stopped || graphData.meta.stopped);
-  } catch(e) { console.error(e); }
+    showGenButton(stopped||graphData.meta.stopped);
+  } catch(e){ console.error(e); }
 }
 
-/* ═══════════════════════════════════════════
-   STATS
-═══════════════════════════════════════════ */
-function updateStats(nodes, meta = {}) {
-  const ok   = nodes.filter(n => n.status_code === 200).length;
-  const rxx  = nodes.filter(n => n.status_code >= 300 && n.status_code < 400).length;
-  const err  = nodes.filter(n => n.status_code >= 400 || n.status_code === 0).length;
-  const dep  = meta.max_depth ?? Math.max(...nodes.map(n => n.depth), 0);
-  document.getElementById("st-total").textContent  = nodes.length;
-  document.getElementById("st-200").textContent    = ok;
-  document.getElementById("st-3xx").textContent    = rxx;
-  document.getElementById("st-err").textContent    = err;
-  document.getElementById("st-depth").textContent  = dep;
-  document.getElementById("st-robots").textContent = meta.robots_blocked ?? "—";
+/* ═══════════════════════════ COCON INDEX ═══════════════════════════ */
+function buildCoconIndex() {
+  if(!graphData) return;
+  const nodeById = {};
+  graphData.nodes.forEach(n => { nodeById[n.id]=n; });
 
-  const sel = document.getElementById("filterDepth");
-  const prev = sel.value;
-  sel.innerHTML = '<option value="">Toutes depths</option>';
-  [...new Set(nodes.map(n => n.depth))].sort((a,b)=>a-b).forEach(d => {
-    const o = document.createElement("option");
-    o.value = d; o.textContent = "Depth " + d; sel.appendChild(o);
-  });
-  sel.value = prev;
-}
-
-/* ═══════════════════════════════════════════
-   TABLE
-═══════════════════════════════════════════ */
-function renderTable() {
-  if (!graphData) return;
-  const search = document.getElementById("filterSearch").value.toLowerCase();
-  const status = document.getElementById("filterStatus").value;
-  const depth  = document.getElementById("filterDepth").value;
-
-  let rows = graphData.nodes.filter(n => {
-    const ms = !search || n.url.toLowerCase().includes(search) || n.title.toLowerCase().includes(search);
-    let mst = true;
-    if (status === "200") mst = n.status_code === 200;
-    else if (status === "3xx") mst = n.status_code >= 300 && n.status_code < 400;
-    else if (status === "4xx") mst = n.status_code >= 400 && n.status_code < 500;
-    else if (status === "5xx") mst = n.status_code >= 500;
-    else if (status === "0")   mst = n.status_code === 0;
-    const md = depth === "" || n.depth === parseInt(depth);
-    return ms && mst && md;
-  });
-
-  rows.sort((a, b) => sortDir * (typeof a[sortCol] === "string" ? a[sortCol].localeCompare(b[sortCol]) : (a[sortCol] - b[sortCol])));
-
-  const tbody = document.getElementById("tableBody");
-  tbody.innerHTML = rows.map(n => `
-    <tr data-id="${n.id}" class="${n.id === selectedNodeId ? 'selected' : ''}">
-      <td title="${n.url}">${shortUrl(n.url)}</td>
-      <td title="${n.title}">${n.title || "—"}</td>
-      <td>${statusBadge(n.status_code)}</td>
-      <td>${n.depth}</td>
-      <td>${n.inlinks_count}</td>
-      <td>${n.outlinks_count}</td>
-    </tr>`).join("");
-
-  tbody.querySelectorAll("tr").forEach(tr => {
-    tr.addEventListener("click", () => {
-      const id = parseInt(tr.dataset.id);
-      selectedNodeId = id;
-      highlightTableRow(id);
-      if (graphReady) drawCanvas();
+  const contentInlinks = {};
+  graphData.nodes.forEach(n => {
+    (n.content_link_ids||[]).forEach(tid => {
+      if(!contentInlinks[tid]) contentInlinks[tid]=[];
+      contentInlinks[tid].push(n.id);
     });
   });
+
+  // all_link_ids from edges
+  const allOutlinks = {};
+  graphData.edges.forEach(e => {
+    if(!allOutlinks[e.source]) allOutlinks[e.source]=[];
+    allOutlinks[e.source].push(e.target);
+  });
+  const allInlinks = {};
+  graphData.edges.forEach(e => {
+    if(!allInlinks[e.target]) allInlinks[e.target]=[];
+    allInlinks[e.target].push(e.source);
+  });
+
+  coconIndex = { nodeById, contentInlinks, allOutlinks, allInlinks };
 }
 
-function highlightTableRow(id) {
-  document.querySelectorAll("#tableBody tr").forEach(tr => tr.classList.toggle("selected", parseInt(tr.dataset.id) === id));
-  document.querySelector(`#tableBody tr[data-id="${id}"]`)?.scrollIntoView({ block: "nearest" });
+function hasCoconData() {
+  return graphData && graphData.nodes.length>0 && graphData.nodes[0].content_link_ids !== undefined;
 }
 
-/* ═══════════════════════════════════════════
-   GRAPH SUBSET SELECTION
-═══════════════════════════════════════════ */
+/* ═══════════════════════════ STATS ═══════════════════════════ */
+function updateStats(nodes, meta={}) {
+  const ok=nodes.filter(n=>n.status_code===200).length;
+  const rxx=nodes.filter(n=>n.status_code>=300&&n.status_code<400).length;
+  const err=nodes.filter(n=>n.status_code>=400||n.status_code===0).length;
+  document.getElementById("st-total").textContent=nodes.length;
+  document.getElementById("st-200").textContent=ok;
+  document.getElementById("st-3xx").textContent=rxx;
+  document.getElementById("st-err").textContent=err;
+  document.getElementById("st-depth").textContent=meta.max_depth??"—";
+  document.getElementById("st-robots").textContent=meta.robots_blocked??"—";
+  const sel=document.getElementById("filterDepth");
+  const prev=sel.value;
+  sel.innerHTML='<option value="">Toutes depths</option>';
+  [...new Set(nodes.map(n=>n.depth))].sort((a,b)=>a-b).forEach(d=>{const o=document.createElement("option");o.value=d;o.textContent="Depth "+d;sel.appendChild(o);});
+  sel.value=prev;
+}
+
+/* ═══════════════════════════ GRAPH TABLE ═══════════════════════════ */
+function renderTable() {
+  if(!graphData) return;
+  const search=document.getElementById("filterSearch").value.toLowerCase();
+  const status=document.getElementById("filterStatus").value;
+  const depth=document.getElementById("filterDepth").value;
+  let rows=graphData.nodes.filter(n=>{
+    const ms=!search||n.url.toLowerCase().includes(search)||n.title.toLowerCase().includes(search);
+    let mst=true;
+    if(status==="200") mst=n.status_code===200;
+    else if(status==="3xx") mst=n.status_code>=300&&n.status_code<400;
+    else if(status==="4xx") mst=n.status_code>=400&&n.status_code<500;
+    else if(status==="5xx") mst=n.status_code>=500;
+    else if(status==="0")   mst=n.status_code===0;
+    const md=depth===""||n.depth===parseInt(depth);
+    return ms&&mst&&md;
+  });
+  rows.sort((a,b)=>sortDir*(typeof a[sortCol]==="string"?a[sortCol].localeCompare(b[sortCol]):(a[sortCol]-b[sortCol])));
+  const tbody=document.getElementById("tableBody");
+  tbody.innerHTML=rows.map(n=>`<tr data-id="${n.id}" class="${n.id===selectedNodeId?"selected":""}"><td title="${n.url}">${shortUrl(n.url)}</td><td title="${n.title}">${n.title||"—"}</td><td>${statusBadge(n.status_code)}</td><td>${n.depth}</td><td>${n.inlinks_count}</td><td>${n.outlinks_count}</td></tr>`).join("");
+  tbody.querySelectorAll("tr").forEach(tr=>{
+    tr.addEventListener("click",()=>{ const id=parseInt(tr.dataset.id); selectedNodeId=id; highlightTableRow(id); if(graphReady) drawCanvas(); });
+  });
+}
+function highlightTableRow(id){ document.querySelectorAll("#tableBody tr").forEach(tr=>tr.classList.toggle("selected",parseInt(tr.dataset.id)===id)); document.querySelector(`#tableBody tr[data-id="${id}"]`)?.scrollIntoView({block:"nearest"}); }
+
+/* ═══════════════════════════ GRAPH SUBSET ═══════════════════════════ */
 function buildGraphSubset() {
-  if (!graphData) return;
-  const limit = parseInt(document.getElementById("graphLimit").value) || 0;
-  const sortBy = document.getElementById("graphSortBy").value;
-  let sorted = [...graphData.nodes].sort((a, b) => b[sortBy] - a[sortBy]);
-  graphNodes = limit > 0 ? sorted.slice(0, limit) : sorted;
+  const limit=parseInt(document.getElementById("graphLimit").value)||0;
+  const sortBy=document.getElementById("graphSortBy").value;
+  let sorted=[...graphData.nodes].sort((a,b)=>b[sortBy]-a[sortBy]);
+  graphNodes=limit>0?sorted.slice(0,limit):sorted;
 }
 
-/* ═══════════════════════════════════════════
-   WEBWORKER — force layout
-═══════════════════════════════════════════ */
-const WORKER_SRC = `
+/* ═══════════════════════════ WEBWORKER ═══════════════════════════ */
+const WORKER_SRC=`
 importScripts('https://d3js.org/d3.v7.min.js');
-
-function nodeRadius(n, maxIn) {
-  return Math.max(4, Math.min(22, 5 + (n.inlinks_count / Math.max(1, maxIn)) * 17));
-}
-
-self.onmessage = function(e) {
-  const { nodes, edges, width, height } = e.data;
-  const maxIn = Math.max(1, ...nodes.map(n => n.inlinks_count));
-  const simNodes = nodes.map(n => ({ ...n }));
-  const nodeById = {};
-  simNodes.forEach(n => nodeById[n.id] = n);
-  const simEdges = edges
-    .filter(e => nodeById[e.source] && nodeById[e.target])
-    .map(e => ({ source: e.source, target: e.target }));
-
-  const sim = d3.forceSimulation(simNodes)
-    .force("link", d3.forceLink(simEdges).id(d => d.id).distance(160).strength(0.25))
-    .force("charge", d3.forceManyBody().strength(-350))
-    .force("center", d3.forceCenter(width / 2, height / 2))
-    .force("collision", d3.forceCollide(d => nodeRadius(d, maxIn) + 3))
+function nr(n,maxIn){return Math.max(4,Math.min(22,5+(n.inlinks_count/Math.max(1,maxIn))*17));}
+self.onmessage=function(e){
+  const{nodes,edges,width,height}=e.data;
+  const maxIn=Math.max(1,...nodes.map(n=>n.inlinks_count));
+  const sn=nodes.map(n=>({...n}));
+  const nb={};sn.forEach(n=>nb[n.id]=n);
+  const se=edges.filter(e=>nb[e.source]&&nb[e.target]).map(e=>({source:e.source,target:e.target}));
+  const sim=d3.forceSimulation(sn)
+    .force("link",d3.forceLink(se).id(d=>d.id).distance(160).strength(0.25))
+    .force("charge",d3.forceManyBody().strength(-350))
+    .force("center",d3.forceCenter(width/2,height/2))
+    .force("collision",d3.forceCollide(d=>nr(d,maxIn)+3))
     .stop();
+  const ticks=Math.ceil(Math.log(sim.alphaMin())/Math.log(1-sim.alphaDecay()));
+  for(let i=0;i<ticks;i++){sim.tick();if(i%100===0)self.postMessage({type:'tick',i,total:ticks});}
+  self.postMessage({type:'done',positions:sn.map(n=>({id:n.id,x:n.x,y:n.y}))});
+};`;
 
-  const ticks = Math.ceil(Math.log(sim.alphaMin()) / Math.log(1 - sim.alphaDecay()));
-  for (let i = 0; i < ticks; i++) {
-    sim.tick();
-    if (i % 100 === 0) self.postMessage({ type: 'tick', i, total: ticks });
-  }
-  self.postMessage({
-    type: 'done',
-    positions: simNodes.map(n => ({ id: n.id, x: n.x, y: n.y }))
-  });
-};
-`;
-
-function runWorker(nodes, edges, width, height) {
-  return new Promise((resolve) => {
-    const blob = new Blob([WORKER_SRC], { type: "application/javascript" });
-    const url = URL.createObjectURL(blob);
-    const worker = new Worker(url);
-    worker.onmessage = (e) => {
-      if (e.data.type === "tick") {
-        const pct = Math.round((e.data.i / e.data.total) * 100);
-        document.getElementById("progressLabel").textContent = `Calcul du graphe… ${pct}%`;
-        document.getElementById("progressFill").style.width = pct + "%";
-      } else if (e.data.type === "done") {
-        worker.terminate();
-        URL.revokeObjectURL(url);
-        resolve(e.data.positions);
-      }
+function runWorker(nodes,edges,width,height){
+  return new Promise(resolve=>{
+    const blob=new Blob([WORKER_SRC],{type:"application/javascript"});
+    const url=URL.createObjectURL(blob);
+    const worker=new Worker(url);
+    worker.onmessage=e=>{
+      if(e.data.type==="tick"){const pct=Math.round((e.data.i/e.data.total)*100);document.getElementById("progressLabel").textContent=`Calcul du graphe… ${pct}%`;document.getElementById("progressFill").style.width=pct+"%";}
+      else if(e.data.type==="done"){worker.terminate();URL.revokeObjectURL(url);resolve(e.data.positions);}
     };
-    worker.postMessage({ nodes, edges, width, height });
+    worker.postMessage({nodes,edges,width,height});
   });
 }
 
-/* ═══════════════════════════════════════════
-   GENERATE GRAPH
-═══════════════════════════════════════════ */
+/* ═══════════════════════════ GENERATE GRAPH ═══════════════════════════ */
 async function generateGraph() {
-  if (!graphData) return;
+  if(!graphData) return;
   buildGraphSubset();
-
-  const canvas = document.getElementById("graphCanvas");
-  const wrap = document.getElementById("graphWrap");
-  canvas.width = wrap.clientWidth;
-  canvas.height = wrap.clientHeight;
-
-  document.getElementById("progressWrap").style.display = "flex";
-  document.getElementById("progressLabel").textContent = "Calcul du graphe…";
-  document.getElementById("progressFill").style.width = "0%";
-  document.getElementById("genGraphBtn").style.display = "none";
-
-  const nodeSet = new Set(graphNodes.map(n => n.id));
-  const subEdges = graphData.edges.filter(e => nodeSet.has(e.source) && nodeSet.has(e.target));
-
-  const positions = await runWorker(graphNodes, subEdges, canvas.width, canvas.height);
-  nodePositions = {};
-  positions.forEach(p => { nodePositions[p.id] = { x: p.x, y: p.y }; });
-
+  const canvas=document.getElementById("graphCanvas");
+  const wrap=document.getElementById("graphWrap");
+  canvas.width=wrap.clientWidth; canvas.height=wrap.clientHeight;
+  document.getElementById("progressWrap").style.display="flex";
+  document.getElementById("progressLabel").textContent="Calcul du graphe…";
+  document.getElementById("progressFill").style.width="0%";
+  document.getElementById("genGraphBtn").style.display="none";
+  const nodeSet=new Set(graphNodes.map(n=>n.id));
+  const subEdges=graphData.edges.filter(e=>nodeSet.has(e.source)&&nodeSet.has(e.target));
+  const positions=await runWorker(graphNodes,subEdges,canvas.width,canvas.height);
+  nodePositions={};
+  positions.forEach(p=>{nodePositions[p.id]={x:p.x,y:p.y};});
   hideProgress();
-  setupCanvasInteraction(canvas, subEdges);
+  setupCanvasInteraction(canvas,subEdges);
   showCanvas();
   drawCanvas();
 }
 
-/* ═══════════════════════════════════════════
-   CANVAS RENDER
-═══════════════════════════════════════════ */
+/* ═══════════════════════════ CANVAS DRAW ═══════════════════════════ */
 function drawCanvas() {
-  const canvas = document.getElementById("graphCanvas");
-  if (!canvas || !graphReady) return;
-  const ctx = canvas.getContext("2d");
-  const t = canvasTransform;
-  const nodeSet = new Set(graphNodes.map(n => n.id));
-  const allSubEdges = graphData.edges.filter(e => nodeSet.has(e.source) && nodeSet.has(e.target));
-
-  // When a node is selected, restrict view to it + direct neighbors
-  let visibleNodeSet = nodeSet;
-  let subEdges = allSubEdges;
-  if (selectedNodeId !== null) {
-    const neighbors = new Set([selectedNodeId]);
-    for (const e of allSubEdges) {
-      if (e.source === selectedNodeId) neighbors.add(e.target);
-      if (e.target === selectedNodeId) neighbors.add(e.source);
-    }
-    visibleNodeSet = neighbors;
-    subEdges = allSubEdges.filter(e => neighbors.has(e.source) && neighbors.has(e.target));
+  const canvas=document.getElementById("graphCanvas");
+  if(!canvas||!graphReady) return;
+  const ctx=canvas.getContext("2d");
+  const t=canvasTransform;
+  const nodeSet=new Set(graphNodes.map(n=>n.id));
+  const allSubEdges=graphData.edges.filter(e=>nodeSet.has(e.source)&&nodeSet.has(e.target));
+  let visibleNodeSet=nodeSet, subEdges=allSubEdges;
+  if(selectedNodeId!==null){
+    const neighbors=new Set([selectedNodeId]);
+    for(const e of allSubEdges){if(e.source===selectedNodeId)neighbors.add(e.target);if(e.target===selectedNodeId)neighbors.add(e.source);}
+    visibleNodeSet=neighbors;
+    subEdges=allSubEdges.filter(e=>neighbors.has(e.source)&&neighbors.has(e.target));
   }
-
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.clearRect(0,0,canvas.width,canvas.height);
   ctx.save();
-  ctx.translate(t.x, t.y);
-  ctx.scale(t.k, t.k);
-
-  // Draw edges
-  ctx.lineWidth = 0.8 / t.k;
-  for (const edge of subEdges) {
-    const s = nodePositions[edge.source];
-    const tg = nodePositions[edge.target];
-    if (!s || !tg) continue;
-    const isHighlighted = selectedNodeId !== null && (edge.source === selectedNodeId || edge.target === selectedNodeId);
-    ctx.beginPath();
-    ctx.moveTo(s.x, s.y);
-    ctx.lineTo(tg.x, tg.y);
-    ctx.strokeStyle = isHighlighted ? "#56cfb2" : "#3a3f5c";
-    ctx.globalAlpha = isHighlighted ? 0.9 : 0.45;
-    ctx.stroke();
-    // Arrow tip
-    if (isHighlighted) {
-      const angle = Math.atan2(tg.y - s.y, tg.x - s.x);
-      const r = nodeRadius(graphNodes.find(n => n.id === edge.target) || {inlinks_count:0});
-      const ax = tg.x - Math.cos(angle) * (r + 6 / t.k);
-      const ay = tg.y - Math.sin(angle) * (r + 6 / t.k);
-      ctx.beginPath();
-      ctx.moveTo(ax, ay);
-      ctx.lineTo(ax - Math.cos(angle - 0.4) * 8 / t.k, ay - Math.sin(angle - 0.4) * 8 / t.k);
-      ctx.lineTo(ax - Math.cos(angle + 0.4) * 8 / t.k, ay - Math.sin(angle + 0.4) * 8 / t.k);
-      ctx.closePath();
-      ctx.fillStyle = "#56cfb2";
-      ctx.fill();
-    }
+  ctx.translate(t.x,t.y);
+  ctx.scale(t.k,t.k);
+  ctx.lineWidth=0.8/t.k;
+  for(const edge of subEdges){
+    const s=nodePositions[edge.source],tg=nodePositions[edge.target];
+    if(!s||!tg) continue;
+    const isH=selectedNodeId!==null&&(edge.source===selectedNodeId||edge.target===selectedNodeId);
+    ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.lineTo(tg.x,tg.y);
+    ctx.strokeStyle=isH?"#56cfb2":"#3a3f5c";ctx.globalAlpha=isH?0.9:0.45;ctx.stroke();
+    if(isH){const a=Math.atan2(tg.y-s.y,tg.x-s.x);const rr=nodeRadius(graphNodes.find(n=>n.id===edge.target)||{inlinks_count:0},graphNodes);const ax=tg.x-Math.cos(a)*(rr+6/t.k),ay=tg.y-Math.sin(a)*(rr+6/t.k);ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(ax-Math.cos(a-0.4)*8/t.k,ay-Math.sin(a-0.4)*8/t.k);ctx.lineTo(ax-Math.cos(a+0.4)*8/t.k,ay-Math.sin(a+0.4)*8/t.k);ctx.closePath();ctx.fillStyle="#56cfb2";ctx.fill();}
   }
-  ctx.globalAlpha = 1;
-
-  // Draw nodes
-  for (const node of graphNodes) {
-    if (!visibleNodeSet.has(node.id)) continue;
-    const pos = nodePositions[node.id];
-    if (!pos) continue;
-    const r = nodeRadius(node);
-    const isSelected = node.id === selectedNodeId;
-    const isHovered  = node.id === hoveredNode?.id;
-    ctx.beginPath();
-    ctx.arc(pos.x, pos.y, r, 0, Math.PI * 2);
-    ctx.fillStyle = statusColor(node.status_code);
-    ctx.globalAlpha = 0.85;
-    ctx.fill();
-    ctx.globalAlpha = 1;
-    if (isSelected || isHovered) {
-      ctx.strokeStyle = isSelected ? "#fff" : "#ccc";
-      ctx.lineWidth = (isSelected ? 2.5 : 1.5) / t.k;
-      ctx.stroke();
-    }
+  ctx.globalAlpha=1;
+  for(const node of graphNodes){
+    if(!visibleNodeSet.has(node.id)) continue;
+    const pos=nodePositions[node.id];if(!pos) continue;
+    const r=nodeRadius(node,graphNodes);
+    ctx.beginPath();ctx.arc(pos.x,pos.y,r,0,Math.PI*2);
+    ctx.fillStyle=statusColor(node.status_code);ctx.globalAlpha=0.85;ctx.fill();ctx.globalAlpha=1;
+    if(node.id===selectedNodeId||node.id===hoveredNode?.id){ctx.strokeStyle=node.id===selectedNodeId?"#fff":"#ccc";ctx.lineWidth=(node.id===selectedNodeId?2.5:1.5)/t.k;ctx.stroke();}
   }
-
   ctx.restore();
 }
 
-/* ═══════════════════════════════════════════
-   CANVAS INTERACTION
-═══════════════════════════════════════════ */
-function setupCanvasInteraction(canvas, subEdges) {
-  canvasTransform = d3.zoomIdentity;
-  const zoom = d3.zoom().scaleExtent([0.05, 8]).on("zoom", (e) => {
-    canvasTransform = e.transform;
-    drawCanvas();
-  });
+function setupCanvasInteraction(canvas,subEdges){
+  canvasTransform=d3.zoomIdentity;
+  const zoom=d3.zoom().scaleExtent([0.05,8]).on("zoom",(e)=>{canvasTransform=e.transform;drawCanvas();});
   d3.select(canvas).call(zoom);
-
-  const tooltip = document.getElementById("tooltip");
-
-  function hitTest(mx, my) {
-    for (const node of graphNodes) {
-      const pos = nodePositions[node.id];
-      if (!pos) continue;
-      const r = nodeRadius(node);
-      const wx = (mx - canvasTransform.x) / canvasTransform.k;
-      const wy = (my - canvasTransform.y) / canvasTransform.k;
-      if ((wx - pos.x) ** 2 + (wy - pos.y) ** 2 <= r * r) return node;
-    }
-    return null;
-  }
-
-  canvas.addEventListener("mousemove", (e) => {
-    const rect = canvas.getBoundingClientRect();
-    const found = hitTest(e.clientX - rect.left, e.clientY - rect.top);
-    if (found !== hoveredNode) { hoveredNode = found; drawCanvas(); }
-    if (found) {
-      tooltip.classList.add("visible");
-      document.getElementById("tt-url").textContent     = found.url;
-      document.getElementById("tt-title").textContent   = found.title || "(sans titre)";
-      document.getElementById("tt-status").textContent  = found.status_code || "Erreur";
-      document.getElementById("tt-depth").textContent   = found.depth;
-      document.getElementById("tt-inlinks").textContent = found.inlinks_count;
-      document.getElementById("tt-outlinks").textContent= found.outlinks_count;
-      document.getElementById("tt-words").textContent   = found.word_count.toLocaleString();
-      document.getElementById("tt-h1").textContent      = found.h1.join(" / ") || "—";
-      tooltip.style.left = (e.clientX + 16) + "px";
-      tooltip.style.top  = (e.clientY - 10) + "px";
-    } else {
-      tooltip.classList.remove("visible");
-    }
-  });
-
-  canvas.addEventListener("mouseleave", () => { tooltip.classList.remove("visible"); hoveredNode = null; drawCanvas(); });
-
-  canvas.addEventListener("click", (e) => {
-    const rect = canvas.getBoundingClientRect();
-    const found = hitTest(e.clientX - rect.left, e.clientY - rect.top);
-    if (found) {
-      selectedNodeId = found.id;
-      highlightTableRow(found.id);
-    } else {
-      selectedNodeId = null;
-      document.querySelectorAll("#tableBody tr").forEach(tr => tr.classList.remove("selected"));
-    }
-    drawCanvas();
-  });
-
-  // Resize
-  new ResizeObserver(() => {
-    canvas.width = canvas.parentElement.clientWidth;
-    canvas.height = canvas.parentElement.clientHeight;
-    drawCanvas();
-  }).observe(canvas.parentElement);
+  const tooltip=document.getElementById("tooltip");
+  function hitTest(mx,my){for(const node of graphNodes){const pos=nodePositions[node.id];if(!pos)continue;const r=nodeRadius(node,graphNodes);const wx=(mx-canvasTransform.x)/canvasTransform.k,wy=(my-canvasTransform.y)/canvasTransform.k;if((wx-pos.x)**2+(wy-pos.y)**2<=r*r)return node;}return null;}
+  canvas.addEventListener("mousemove",e=>{const rect=canvas.getBoundingClientRect();const found=hitTest(e.clientX-rect.left,e.clientY-rect.top);if(found!==hoveredNode){hoveredNode=found;drawCanvas();}if(found){tooltip.classList.add("visible");document.getElementById("tt-url").textContent=found.url;document.getElementById("tt-title").textContent=found.title||"(sans titre)";document.getElementById("tt-status").textContent=found.status_code||"Erreur";document.getElementById("tt-depth").textContent=found.depth;document.getElementById("tt-inlinks").textContent=found.inlinks_count;document.getElementById("tt-outlinks").textContent=found.outlinks_count;document.getElementById("tt-words").textContent=found.word_count.toLocaleString();document.getElementById("tt-h1").textContent=found.h1.join(" / ")||"—";tooltip.style.left=(e.clientX+16)+"px";tooltip.style.top=(e.clientY-10)+"px";}else tooltip.classList.remove("visible");});
+  canvas.addEventListener("mouseleave",()=>{tooltip.classList.remove("visible");hoveredNode=null;drawCanvas();});
+  canvas.addEventListener("click",e=>{const rect=canvas.getBoundingClientRect();const found=hitTest(e.clientX-rect.left,e.clientY-rect.top);if(found){selectedNodeId=found.id;highlightTableRow(found.id);}else{selectedNodeId=null;document.querySelectorAll("#tableBody tr").forEach(tr=>tr.classList.remove("selected"));}drawCanvas();});
+  new ResizeObserver(()=>{canvas.width=canvas.parentElement.clientWidth;canvas.height=canvas.parentElement.clientHeight;drawCanvas();}).observe(canvas.parentElement);
 }
 
-/* ═══════════════════════════════════════════
-   EVENTS
-═══════════════════════════════════════════ */
-document.getElementById("btnOptions").addEventListener("click", () => {
-  const panel = document.getElementById("optionsPanel");
-  const btn = document.getElementById("btnOptions");
-  const open = panel.classList.toggle("open");
-  btn.classList.toggle("open", open);
-});
+/* ═══════════════════════════ COCON DASHBOARD ═══════════════════════════ */
+function renderCoconDashboard() {
+  if(!graphData){
+    document.getElementById("coconNoData").style.display="flex";
+    document.getElementById("coconTableWrap").style.display="none";
+    document.getElementById("coconNoDataMsg").textContent="Lancez un crawl pour activer l'analyse du cocon sémantique.";
+    return;
+  }
+  if(!hasCoconData()){
+    document.getElementById("coconNoData").style.display="flex";
+    document.getElementById("coconTableWrap").style.display="none";
+    document.getElementById("coconNoDataMsg").textContent="Relancez un crawl pour activer l'analyse du cocon sémantique (champ content_links manquant).";
+    return;
+  }
+  document.getElementById("coconNoData").style.display="none";
+  document.getElementById("coconTableWrap").style.display="block";
+  renderCoconTable();
+}
 
-document.getElementById("btnStart").addEventListener("click", async () => {
-  const url = document.getElementById("urlInput").value.trim();
-  if (!url) return alert("Veuillez saisir une URL");
-  const maxUrls = parseInt(document.getElementById("maxUrls").value) || 200;
-  const delay   = parseFloat(document.getElementById("crawlDelay").value) || 0.5;
-  const config  = buildConfig();
-  savePrefs();
-
-  setBtnState(true);
-  showCrawlLive();
-  document.getElementById("progressWrap").style.display = "flex";
-  document.getElementById("progressLabel").textContent = "Démarrage du crawl…";
-  document.getElementById("progressFill").style.width = "0%";
-
-  try {
-    const r = await fetch("/api/crawl", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url, max_urls: maxUrls, delay, config }),
+function getCoconRows() {
+  if(!graphData||!coconIndex) return [];
+  const search=document.getElementById("coconSearch").value.toLowerCase();
+  return graphData.nodes
+    .map(n=>({
+      ...n,
+      content_inlinks: (coconIndex.contentInlinks[n.id]||[]).length,
+      ratio: n.outlinks_count>0?Math.round((n.content_link_count||0)/n.outlinks_count*100):0,
+    }))
+    .filter(n=>{
+      if(search && !n.url.toLowerCase().includes(search) && !n.title.toLowerCase().includes(search)) return false;
+      if(coconChip==="orphan") return (coconIndex.contentInlinks[n.id]||[]).length===0;
+      if(coconChip==="hub")    return (n.content_link_count||0)>=5;
+      if(coconChip==="auth")   return (coconIndex.contentInlinks[n.id]||[]).length>=5;
+      return true;
     });
-    const j = await r.json();
-    if (!r.ok) { alert(j.error); setBtnState(false); hideProgress(); showEmpty(); }
-  } catch(e) { alert("Impossible de contacter le serveur : " + e); setBtnState(false); hideProgress(); showEmpty(); }
+}
+
+function renderCoconTable() {
+  let rows=getCoconRows();
+  rows.sort((a,b)=>coconSortDir*(typeof a[coconSortCol]==="string"?a[coconSortCol].localeCompare(b[coconSortCol]):(a[coconSortCol]-b[coconSortCol])));
+  const tbody=document.getElementById("coconTableBody");
+  tbody.innerHTML=rows.map(n=>`
+    <tr data-id="${n.id}">
+      <td title="${n.url}">${shortUrl(n.url)}</td>
+      <td title="${n.title}">${n.title||"—"}</td>
+      <td>${n.content_inlinks}</td>
+      <td>${n.content_link_count||0}</td>
+      <td>${n.ratio}%</td>
+    </tr>`).join("");
+  tbody.querySelectorAll("tr").forEach(tr=>{
+    tr.addEventListener("click",()=>openCoconDetail(parseInt(tr.dataset.id)));
+  });
+}
+
+/* ═══════════════════════════ COCON DETAIL ═══════════════════════════ */
+function openCoconDetail(nodeId) {
+  coconSelectedId = nodeId;
+  document.getElementById("coconDashboard").style.display="none";
+  document.getElementById("coconDetail").style.display="flex";
+  renderCoconDetail();
+}
+
+function renderCoconDetail() {
+  if(coconSelectedId===null||!coconIndex) return;
+  const n = coconIndex.nodeById[coconSelectedId];
+  if(!n) return;
+
+  // Page info bar
+  const contentInlinks = coconIndex.contentInlinks[n.id]||[];
+  const contentOutlinks = n.content_link_ids||[];
+  const ratio = n.outlinks_count>0?Math.round((contentOutlinks.length/n.outlinks_count)*100):0;
+  document.getElementById("coconPageInfo").innerHTML=`
+    <strong title="${n.url}">${n.title||shortUrl(n.url)}</strong>
+    <span>In édito : <strong>${contentInlinks.length}</strong></span>
+    <span>Out édito : <strong>${contentOutlinks.length}</strong></span>
+    <span>Ratio : <strong>${ratio}%</strong></span>
+    <button id="coconNavToggle" class="${coconShowNav?"active":""}" style="margin-left:auto">
+      ${coconShowNav?"Masquer":"Afficher"} liens nav
+    </button>`;
+  document.getElementById("coconNavToggle")?.addEventListener("click",()=>{coconShowNav=!coconShowNav;renderCoconDetail();});
+
+  // Side lists
+  document.getElementById("cntInlinks").textContent=contentInlinks.length;
+  document.getElementById("cntOutlinks").textContent=contentOutlinks.length;
+  document.getElementById("coconInlinkList").innerHTML=contentInlinks.map(id=>{
+    const nn=coconIndex.nodeById[id];if(!nn)return"";
+    return `<div class="cocon-link-item" data-id="${id}" title="${nn.url}">${shortUrl(nn.url)}<br><span style="color:var(--text-muted);font-size:11px">${nn.title||""}</span></div>`;
+  }).join("");
+  document.getElementById("coconOutlinkList").innerHTML=contentOutlinks.map(id=>{
+    const nn=coconIndex.nodeById[id];if(!nn)return"";
+    return `<div class="cocon-link-item" data-id="${id}" title="${nn.url}">${shortUrl(nn.url)}<br><span style="color:var(--text-muted);font-size:11px">${nn.title||""}</span></div>`;
+  }).join("");
+
+  // Click on side list = navigate
+  document.querySelectorAll(".cocon-link-item[data-id]").forEach(el=>{
+    el.addEventListener("click",()=>openCoconDetail(parseInt(el.dataset.id)));
+  });
+
+  // Quality indicators
+  const kw = new Set(keywords(n.title));
+  const linkedNodes = [...new Set([...contentInlinks,...contentOutlinks])].map(id=>coconIndex.nodeById[id]).filter(Boolean);
+  const overlap = linkedNodes.filter(ln=>keywords(ln.title).some(w=>kw.has(w))).length;
+  const thematic = linkedNodes.length>0?Math.round((overlap/linkedNodes.length)*100):0;
+  const alert = contentOutlinks.length<3?"<span class='q-alert'>⚠️ Page peu maillée éditorialement (< 3 liens sortants)</span>":"";
+  document.getElementById("coconQuality").innerHTML=`
+    <div class="q-item"><span class="q-lbl">Ratio maillage édito</span><span class="q-val ${ratio<10?"q-warn":"q-ok"}">${ratio}%</span></div>
+    <div class="q-item"><span class="q-lbl">Cohérence thématique</span><span class="q-val ${thematic<40?"q-warn":"q-ok"}">${thematic}%</span></div>
+    <div class="q-item"><span class="q-lbl">Liens édito sortants</span><span class="q-val">${contentOutlinks.length}</span></div>
+    <div class="q-item"><span class="q-lbl">Liens édito entrants</span><span class="q-val">${contentInlinks.length}</span></div>
+    ${alert}`;
+
+  // Draw mini graph
+  drawCoconGraph(n, contentInlinks, contentOutlinks);
+}
+
+/* ═══════════════════════════ COCON MINI GRAPH ═══════════════════════════ */
+function drawCoconGraph(centerNode, contentInlinks, contentOutlinks) {
+  const canvas = document.getElementById("coconCanvas");
+  const area = document.getElementById("coconGraphArea");
+  canvas.width = area.clientWidth;
+  canvas.height = area.clientHeight;
+
+  const { nodeById, allOutlinks, allInlinks } = coconIndex;
+
+  // Build node set
+  const contentIn  = new Set(contentInlinks);
+  const contentOut = new Set(contentOutlinks);
+
+  // Nav-only: in all_links but not in content_links
+  const allOut = new Set(allOutlinks[centerNode.id]||[]);
+  const allIn  = new Set(allInlinks[centerNode.id]||[]);
+  const navOutOnly = [...allOut].filter(id=>!contentOut.has(id));
+  const navInOnly  = [...allIn].filter(id=>!contentIn.has(id));
+
+  // Collect nodes for graph
+  const nodeIds = new Set([
+    centerNode.id,
+    ...contentInlinks,
+    ...contentOutlinks,
+    ...(coconShowNav ? [...navOutOnly,...navInOnly] : []),
+  ]);
+  const nodes = [...nodeIds].map(id=>({...nodeById[id],_role:
+    id===centerNode.id?"center":
+    contentIn.has(id)&&contentOut.has(id)?"both":
+    contentIn.has(id)?"in":
+    contentOut.has(id)?"out":"nav"
+  })).filter(n=>n.url);
+
+  const edges=[];
+  contentOutlinks.forEach(tid=>{if(nodeIds.has(tid))edges.push({source:centerNode.id,target:tid,type:"content"});});
+  contentInlinks.forEach(sid=>{if(nodeIds.has(sid))edges.push({source:sid,target:centerNode.id,type:"content"});});
+  if(coconShowNav){
+    navOutOnly.forEach(tid=>{if(nodeIds.has(tid))edges.push({source:centerNode.id,target:tid,type:"nav"});});
+    navInOnly.forEach(sid=>{if(nodeIds.has(sid))edges.push({source:sid,target:centerNode.id,type:"nav"});});
+  }
+
+  // Run D3 force (small graph, inline)
+  const simNodes = nodes.map(n=>({...n,x:canvas.width/2+(Math.random()-.5)*100,y:canvas.height/2+(Math.random()-.5)*100}));
+  const nodeMap={};simNodes.forEach(n=>nodeMap[n.id]=n);
+  const simEdges=edges.map(e=>({...e,source:nodeMap[e.source],target:nodeMap[e.target]})).filter(e=>e.source&&e.target);
+  const maxCL=Math.max(1,...nodes.map(n=>n.content_link_count||1));
+  const cnr=n=>Math.max(6,Math.min(24,7+(n.content_link_count||0)/maxCL*16));
+
+  const sim=d3.forceSimulation(simNodes)
+    .force("link",d3.forceLink(simEdges).id(d=>d.id).distance(120).strength(0.4))
+    .force("charge",d3.forceManyBody().strength(-300))
+    .force("center",d3.forceCenter(canvas.width/2,canvas.height/2))
+    .force("collision",d3.forceCollide(d=>cnr(d)+4));
+
+  coconTransform=d3.zoomIdentity;
+  const zoom=d3.zoom().scaleExtent([0.1,6]).on("zoom",(e)=>{coconTransform=e.transform;renderCoconCanvas();});
+  d3.select(canvas).on(".zoom",null).call(zoom);
+
+  function renderCoconCanvas(){
+    const ctx=canvas.getContext("2d");
+    const t=coconTransform;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.save();
+    ctx.translate(t.x,t.y);ctx.scale(t.k,t.k);
+
+    // Edges
+    for(const e of simEdges){
+      if(!e.source.x||!e.target.x) continue;
+      const isNav=e.type==="nav";
+      ctx.beginPath();ctx.moveTo(e.source.x,e.source.y);ctx.lineTo(e.target.x,e.target.y);
+      ctx.strokeStyle=isNav?"#4a5080":"#56cfb2";
+      ctx.globalAlpha=isNav?0.3:0.65;
+      ctx.lineWidth=(isNav?0.8:1.2)/t.k;
+      if(isNav){ctx.setLineDash([4/t.k,4/t.k]);}else{ctx.setLineDash([]);}
+      ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=1;
+      // Arrow
+      if(!isNav){
+        const a=Math.atan2(e.target.y-e.source.y,e.target.x-e.source.x);
+        const r=cnr(e.target);
+        const ax=e.target.x-Math.cos(a)*(r+5/t.k),ay=e.target.y-Math.sin(a)*(r+5/t.k);
+        ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(ax-Math.cos(a-0.4)*7/t.k,ay-Math.sin(a-0.4)*7/t.k);ctx.lineTo(ax-Math.cos(a+0.4)*7/t.k,ay-Math.sin(a+0.4)*7/t.k);ctx.closePath();ctx.fillStyle="#56cfb2";ctx.fill();
+      }
+    }
+
+    // Nodes
+    const COLORS={center:"#3b82f6",in:"#f59e0b",out:"#22c55e",both:"#56cfb2",nav:"#4a5080"};
+    for(const n of simNodes){
+      const r=cnr(n);
+      ctx.beginPath();ctx.arc(n.x,n.y,r,0,Math.PI*2);
+      ctx.fillStyle=COLORS[n._role]||"#6b7280";ctx.globalAlpha=n._role==="nav"?0.4:0.9;ctx.fill();ctx.globalAlpha=1;
+      if(n.id===coconHoveredId){ctx.strokeStyle="#fff";ctx.lineWidth=2/t.k;ctx.stroke();}
+    }
+
+    // Labels for center node
+    const cn=simNodes.find(n=>n._role==="center");
+    if(cn){
+      ctx.font=`${11/t.k}px 'Segoe UI',sans-serif`;
+      ctx.fillStyle="#e2e8f0";ctx.textAlign="center";
+      ctx.fillText(shortUrl(cn.url),cn.x,cn.y+cnr(cn)+12/t.k);
+    }
+
+    ctx.restore();
+  }
+
+  sim.on("tick",renderCoconCanvas);
+
+  // Tooltip on cocon canvas
+  const tooltip=document.getElementById("tooltip");
+  canvas.addEventListener("mousemove",e=>{
+    const rect=canvas.getBoundingClientRect();
+    const wx=(e.clientX-rect.left-coconTransform.x)/coconTransform.k;
+    const wy=(e.clientY-rect.top-coconTransform.y)/coconTransform.k;
+    let found=null;
+    for(const n of simNodes){const r=cnr(n);if((wx-n.x)**2+(wy-n.y)**2<=r*r){found=n;break;}}
+    coconHoveredId=found?.id??null;
+    if(found){
+      tooltip.classList.add("visible");
+      document.getElementById("tt-url").textContent=found.url;
+      document.getElementById("tt-title").textContent=found.title||"(sans titre)";
+      document.getElementById("tt-status").textContent=found.status_code||"—";
+      document.getElementById("tt-depth").textContent=found.depth??"—";
+      document.getElementById("tt-inlinks").textContent=found.content_link_ids?`${(coconIndex.contentInlinks[found.id]||[]).length} édito`:(found.inlinks_count??0);
+      document.getElementById("tt-outlinks").textContent=found.content_link_ids?`${found.content_link_count||0} édito`:(found.outlinks_count??0);
+      document.getElementById("tt-words").textContent=(found.word_count||0).toLocaleString();
+      document.getElementById("tt-h1").textContent=(found.h1||[]).join(" / ")||"—";
+      tooltip.style.left=(e.clientX+16)+"px";tooltip.style.top=(e.clientY-10)+"px";
+    }else tooltip.classList.remove("visible");
+    renderCoconCanvas();
+  });
+  canvas.addEventListener("mouseleave",()=>{tooltip.classList.remove("visible");coconHoveredId=null;renderCoconCanvas();});
+  canvas.addEventListener("click",e=>{
+    const rect=canvas.getBoundingClientRect();
+    const wx=(e.clientX-rect.left-coconTransform.x)/coconTransform.k;
+    const wy=(e.clientY-rect.top-coconTransform.y)/coconTransform.k;
+    for(const n of simNodes){const r=cnr(n);if((wx-n.x)**2+(wy-n.y)**2<=r*r){openCoconDetail(n.id);return;}}
+  });
+
+  new ResizeObserver(()=>{canvas.width=area.clientWidth;canvas.height=area.clientHeight;}).observe(area);
+}
+
+/* ═══════════════════════════ AUTOCOMPLETE ═══════════════════════════ */
+function setupAutocomplete() {
+  const input = document.getElementById("coconPageSearch");
+  const dropdown = document.getElementById("coconAutocomplete");
+
+  input.addEventListener("input", () => {
+    const q = input.value.toLowerCase().trim();
+    dropdown.innerHTML="";
+    if(!q||!graphData){dropdown.style.display="none";return;}
+    const matches=graphData.nodes.filter(n=>n.url.toLowerCase().includes(q)||n.title.toLowerCase().includes(q)).slice(0,10);
+    if(!matches.length){dropdown.style.display="none";return;}
+    matches.forEach(n=>{
+      const div=document.createElement("div");div.className="ac-item";
+      div.innerHTML=`<div class="ac-title">${n.title||"(sans titre)"}</div><div class="ac-url">${shortUrl(n.url)}</div>`;
+      div.addEventListener("click",()=>{input.value="";dropdown.style.display="none";openCoconDetail(n.id);});
+      dropdown.appendChild(div);
+    });
+    const rect=input.getBoundingClientRect();
+    dropdown.style.left=rect.left+"px";dropdown.style.top=(rect.bottom+4)+"px";dropdown.style.width=rect.width+"px";
+    dropdown.style.display="block";
+  });
+  document.addEventListener("click",e=>{if(!dropdown.contains(e.target)&&e.target!==input)dropdown.style.display="none";});
+}
+
+/* ═══════════════════════════ CSV EXPORT ═══════════════════════════ */
+function exportCSV() {
+  if(!graphData||!coconIndex) return;
+  const rows=getCoconRows();
+  rows.sort((a,b)=>-((a.content_inlinks||0)-(b.content_inlinks||0)));
+  const lines=[["URL","Titre","Inlinks édito","Outlinks édito","Ratio édito/total"],...rows.map(r=>[`"${r.url}"`,`"${(r.title||"").replace(/"/g,'""')}"`,r.content_inlinks,r.content_link_count||0,r.ratio+"%"])];
+  const csv=lines.map(r=>r.join(",")).join("\n");
+  const a=document.createElement("a");a.href="data:text/csv;charset=utf-8,"+encodeURIComponent(csv);a.download="cocon_semantique.csv";a.click();
+}
+
+/* ═══════════════════════════ EVENTS ═══════════════════════════ */
+document.getElementById("btnOptions").addEventListener("click",()=>{
+  const panel=document.getElementById("optionsPanel"),btn=document.getElementById("btnOptions");
+  const open=panel.classList.toggle("open");btn.classList.toggle("open",open);
 });
 
-document.getElementById("btnStop").addEventListener("click", async () => {
-  await fetch("/api/crawl/stop", { method: "POST" });
+document.getElementById("btnStart").addEventListener("click",async()=>{
+  const url=document.getElementById("urlInput").value.trim();
+  if(!url) return alert("Veuillez saisir une URL");
+  const maxUrls=parseInt(document.getElementById("maxUrls").value)||200;
+  const delay=parseFloat(document.getElementById("crawlDelay").value)||0.5;
+  const config=buildConfig();savePrefs();
+  setBtnState(true);showCrawlLive();
+  document.getElementById("progressWrap").style.display="flex";
+  document.getElementById("progressLabel").textContent="Démarrage du crawl…";
+  document.getElementById("progressFill").style.width="0%";
+  try{
+    const r=await fetch("/api/crawl",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({url,max_urls:maxUrls,delay,config})});
+    const j=await r.json();if(!r.ok){alert(j.error);setBtnState(false);hideProgress();showEmpty();}
+  }catch(e){alert("Impossible de contacter le serveur : "+e);setBtnState(false);hideProgress();showEmpty();}
 });
 
-document.getElementById("btnLoad").addEventListener("click", () => document.getElementById("fileInput").click());
-
-document.getElementById("fileInput").addEventListener("change", async (e) => {
-  const file = e.target.files[0]; if (!file) return;
-  const fd = new FormData(); fd.append("file", file);
-  const r = await fetch("/api/upload", { method: "POST", body: fd });
-  if (r.ok) await fetchData();
-  else { const j = await r.json(); alert(j.error); }
-  e.target.value = "";
+document.getElementById("btnStop").addEventListener("click",async()=>await fetch("/api/crawl/stop",{method:"POST"}));
+document.getElementById("btnLoad").addEventListener("click",()=>document.getElementById("fileInput").click());
+document.getElementById("fileInput").addEventListener("change",async e=>{
+  const file=e.target.files[0];if(!file)return;
+  const fd=new FormData();fd.append("file",file);
+  const r=await fetch("/api/upload",{method:"POST",body:fd});
+  if(r.ok)await fetchData();else{const j=await r.json();alert(j.error);}
+  e.target.value="";
 });
-
-document.getElementById("genGraphBtn").addEventListener("click", generateGraph);
-
-document.getElementById("graphLimit").addEventListener("change", () => { if (graphReady) generateGraph(); });
-document.getElementById("graphSortBy").addEventListener("change", () => { if (graphReady) generateGraph(); });
+document.getElementById("genGraphBtn").addEventListener("click",generateGraph);
+document.getElementById("graphLimit").addEventListener("change",()=>{if(graphReady)generateGraph();});
+document.getElementById("graphSortBy").addEventListener("change",()=>{if(graphReady)generateGraph();});
 
 // Table sort
-document.querySelectorAll("thead th[data-col]").forEach(th => {
-  th.addEventListener("click", () => {
-    const col = th.dataset.col;
-    if (sortCol === col) sortDir *= -1; else { sortCol = col; sortDir = -1; }
-    renderTable();
+document.querySelectorAll("thead th[data-col]").forEach(th=>{
+  th.addEventListener("click",()=>{const col=th.dataset.col;if(sortCol===col)sortDir*=-1;else{sortCol=col;sortDir=-1;}renderTable();});
+});
+["filterSearch","filterStatus","filterDepth"].forEach(id=>{
+  document.getElementById(id).addEventListener("input",renderTable);
+  document.getElementById(id).addEventListener("change",renderTable);
+});
+
+// Cocon table sort
+document.querySelectorAll("th[data-ccol]").forEach(th=>{
+  th.addEventListener("click",()=>{const col=th.dataset.ccol;if(coconSortCol===col)coconSortDir*=-1;else{coconSortCol=col;coconSortDir=-1;}renderCoconTable();});
+});
+document.getElementById("coconSearch").addEventListener("input",renderCoconTable);
+
+// Cocon filter chips
+["chipOrph","chipHubs","chipAuth"].forEach((id,i)=>{
+  const keys=["orphan","hub","auth"];
+  document.getElementById(id).addEventListener("click",()=>{
+    const chip=keys[i];
+    coconChip=coconChip===chip?null:chip;
+    document.querySelectorAll(".filter-chip").forEach(c=>c.classList.remove("active"));
+    if(coconChip)document.getElementById(id).classList.add("active");
+    renderCoconTable();
   });
 });
 
-// Filters
-["filterSearch", "filterStatus", "filterDepth"].forEach(id => {
-  document.getElementById(id).addEventListener("input", renderTable);
-  document.getElementById(id).addEventListener("change", renderTable);
+document.getElementById("btnBackCocon").addEventListener("click",()=>{
+  document.getElementById("coconDetail").style.display="none";
+  document.getElementById("coconDashboard").style.display="flex";
+  coconSelectedId=null;
 });
+document.getElementById("btnExportCSV").addEventListener("click",exportCSV);
 
-/* ═══════════════════════════════════════════
-   INIT
-═══════════════════════════════════════════ */
+/* ═══════════════════════════ INIT ═══════════════════════════ */
 loadPrefs();
 connectWS();
 fetchData();
+setupAutocomplete();
 </script>
 </body>
 </html>

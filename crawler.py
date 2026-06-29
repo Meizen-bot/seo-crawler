@@ -18,6 +18,26 @@ DEFAULT_SKIP_EXTS = {
 }
 
 
+NAV_SELECTORS_CSS = [
+    "header", "footer", "nav", "aside",
+    "[role='navigation']", "[role='banner']", "[role='contentinfo']",
+    ".nav", ".menu", ".navigation", ".header", ".footer",
+    ".sidebar", ".widget", ".breadcrumb", ".breadcrumbs",
+    "#menu", "#nav", "#header", "#footer", "#sidebar",
+]
+NAV_CLASSES = {
+    "nav", "menu", "navigation", "header", "footer",
+    "sidebar", "widget", "breadcrumb", "breadcrumbs",
+    "top-bar", "topbar", "menubar",
+}
+NAV_IDS = {"menu", "nav", "header", "footer", "sidebar"}
+CONTENT_SELECTORS = [
+    "article", "main", "[role='main']",
+    ".content", ".post", ".entry-content",
+    ".page-content", "#content", ".main-content",
+]
+
+
 @dataclass
 class PageData:
     url: str
@@ -27,6 +47,7 @@ class PageData:
     depth: int = 0
     inlinks: list = field(default_factory=list)
     outlinks: list = field(default_factory=list)
+    content_links: list = field(default_factory=list)
     word_count: int = 0
     h1: list = field(default_factory=list)
     error: str = ""
@@ -232,6 +253,7 @@ class SEOCrawler:
                     links.add(abs_url)
 
             page.outlinks = list(links)
+            page.content_links = self._extract_content_links(resp.text, url)
 
         except requests.exceptions.Timeout:
             page.status_code = 0
@@ -244,6 +266,49 @@ class SEOCrawler:
             page.error = str(e)
 
         return page
+
+    # ── CONTENT LINKS ─────────────────────────────────────────────────────────
+
+    def _extract_content_links(self, html: str, base_url: str) -> list:
+        content_soup = BeautifulSoup(html, "html.parser")
+
+        # Remove structural nav blocks by tag/role
+        for sel in NAV_SELECTORS_CSS:
+            for tag in content_soup.select(sel):
+                try:
+                    tag.decompose()
+                except Exception:
+                    pass
+
+        # Remove class/id based nav elements
+        for tag in content_soup.find_all(True):
+            try:
+                classes = {c.lower() for c in tag.get("class", [])}
+                tag_id = (tag.get("id") or "").lower()
+                if (classes & NAV_CLASSES) or tag_id in NAV_IDS:
+                    tag.decompose()
+            except Exception:
+                pass
+
+        # Find editorial content area
+        content_area = None
+        for sel in CONTENT_SELECTORS:
+            content_area = content_soup.select_one(sel)
+            if content_area:
+                break
+        if not content_area:
+            content_area = content_soup.find("body") or content_soup
+
+        links = set()
+        for a in content_area.find_all("a", href=True):
+            href = a["href"].strip()
+            if not href or href.startswith(("#", "mailto:", "tel:", "javascript:")):
+                continue
+            abs_url = self._normalize_url(urljoin(base_url, href))
+            if self._is_same_domain(abs_url) and self._is_crawlable(abs_url):
+                links.add(abs_url)
+
+        return list(links)
 
     # ── CRAWL LOOP ────────────────────────────────────────────────────────────
 
@@ -314,6 +379,7 @@ class SEOCrawler:
         url_index = {url: i for i, url in enumerate(self.visited)}
 
         for url, page in self.visited.items():
+            content_link_ids = [url_index[u] for u in page.content_links if u in url_index]
             nodes.append({
                 "id": url_index[url],
                 "url": url,
@@ -323,6 +389,8 @@ class SEOCrawler:
                 "depth": page.depth,
                 "inlinks_count": len(page.inlinks),
                 "outlinks_count": len(page.outlinks),
+                "content_link_ids": content_link_ids,
+                "content_link_count": len(content_link_ids),
                 "word_count": page.word_count,
                 "h1": page.h1,
                 "error": page.error,
