@@ -23,7 +23,7 @@ NAV_SELECTORS_CSS = [
     "[role='navigation']", "[role='banner']", "[role='contentinfo']",
     # Generic class patterns
     ".nav", ".menu", ".navigation", ".header", ".footer",
-    ".sidebar", ".widget", ".breadcrumb", ".breadcrumbs",
+    ".sidebar", ".breadcrumb", ".breadcrumbs",
     # ID patterns
     "#menu", "#nav", "#header", "#footer", "#sidebar",
     # WordPress / WooCommerce
@@ -55,15 +55,15 @@ NAV_SELECTORS_CSS = [
 ]
 NAV_CLASSES = {
     "nav", "menu", "navigation", "header", "footer",
-    "sidebar", "widget", "breadcrumb", "breadcrumbs",
+    "sidebar", "breadcrumb", "breadcrumbs",
     "top-bar", "topbar", "menubar",
     # WordPress
     "site-header", "site-footer", "site-navigation",
     "wp-block-navigation",
-    # Elementor
+    # Elementor (header/footer locations only — never "widget": trop large pour Elementor)
     "elementor-location-header", "elementor-location-footer",
     # Related / meta blocks
-    "related-posts", "related", "author-bio", "author-box",
+    "related-posts", "author-bio", "author-box",
     "social-share", "share-buttons", "post-tags", "post-categories",
     "tags-links", "cat-links", "pagination", "nav-links",
     "comments-area", "comment-list",
