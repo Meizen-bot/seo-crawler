@@ -7,248 +7,116 @@
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <style>
     :root {
-      --bg: #0f1117;
-      --surface: #1a1d27;
-      --surface2: #22263a;
-      --border: #2e3250;
-      --text: #e2e8f0;
-      --text-muted: #8892b0;
-      --accent: #7c6cff;
-      --accent2: #56cfb2;
-      --ok: #22c55e;
-      --warn: #f59e0b;
-      --err: #ef4444;
-      --info: #3b82f6;
+      --bg: #0f1117; --surface: #1a1d27; --surface2: #22263a;
+      --border: #2e3250; --text: #e2e8f0; --text-muted: #8892b0;
+      --accent: #7c6cff; --accent2: #56cfb2;
+      --ok: #22c55e; --warn: #f59e0b; --err: #ef4444;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      font-size: 13px;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      overflow: hidden;
-    }
+    body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 13px; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
     /* ── TOP BAR ── */
-    #topbar {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 10px 16px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-      flex-shrink: 0;
-    }
-    #topbar h1 { font-size: 15px; font-weight: 700; color: var(--accent); white-space: nowrap; }
+    #topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 8px 14px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; flex-shrink: 0; }
+    #topbar h1 { font-size: 14px; font-weight: 700; color: var(--accent); white-space: nowrap; }
     #topbar h1 span { color: var(--accent2); }
-    #urlInput {
-      flex: 1;
-      min-width: 220px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 7px 10px;
-      border-radius: 6px;
-      font-size: 13px;
-      outline: none;
-    }
+    #urlInput { flex: 1; min-width: 200px; background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 6px 10px; border-radius: 6px; font-size: 13px; outline: none; }
     #urlInput:focus { border-color: var(--accent); }
-    .cfg-row { display: flex; gap: 8px; align-items: center; }
-    .cfg-row label { color: var(--text-muted); font-size: 12px; }
-    .cfg-row input[type=number] {
-      width: 70px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 6px 8px;
-      border-radius: 6px;
-      font-size: 12px;
-      outline: none;
-    }
-    button {
-      padding: 7px 16px;
-      border-radius: 6px;
-      border: none;
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: 600;
-      transition: opacity .15s;
-    }
+    .cfg-row { display: flex; gap: 6px; align-items: center; }
+    .cfg-row label { color: var(--text-muted); font-size: 12px; white-space: nowrap; }
+    .cfg-row input[type=number] { width: 64px; background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 5px 7px; border-radius: 6px; font-size: 12px; outline: none; }
+    button { padding: 6px 14px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; transition: opacity .15s; }
     button:hover { opacity: .85; }
     #btnStart { background: var(--accent); color: #fff; }
     #btnStop  { background: var(--err); color: #fff; display: none; }
     #btnLoad  { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    #btnOptions { background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border); font-size: 12px; }
+    #btnOptions.open { color: var(--accent); border-color: var(--accent); }
     #fileInput { display: none; }
 
-    /* ── STATS BAR ── */
-    #statsbar {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 6px 16px;
-      display: flex;
-      gap: 24px;
-      align-items: center;
-      flex-shrink: 0;
-    }
-    .stat { display: flex; flex-direction: column; align-items: center; }
-    .stat-val { font-size: 18px; font-weight: 700; }
-    .stat-lbl { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; }
-    .s-ok  { color: var(--ok); }
-    .s-warn{ color: var(--warn); }
-    .s-err { color: var(--err); }
-    .s-acc { color: var(--accent2); }
+    /* ── OPTIONS PANEL ── */
+    #optionsPanel { background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px 16px; display: none; flex-shrink: 0; }
+    #optionsPanel.open { display: block; }
+    .opt-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+    .opt-section h3 { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
+    .toggle-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; cursor: pointer; }
+    .toggle-row input[type=checkbox] { accent-color: var(--accent); width: 14px; height: 14px; cursor: pointer; }
+    .toggle-row label { font-size: 12px; cursor: pointer; }
+    textarea.opt-ta { width: 100%; background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 6px 8px; border-radius: 5px; font-size: 11px; font-family: monospace; resize: vertical; outline: none; min-height: 60px; }
+    textarea.opt-ta:focus { border-color: var(--accent); }
+    .opt-ta-lbl { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; display: block; }
 
     /* ── PROGRESS ── */
-    #progressWrap {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 6px 16px;
-      display: none;
-      flex-direction: column;
-      gap: 4px;
-      flex-shrink: 0;
-    }
-    #progressBar {
-      height: 4px;
-      background: var(--border);
-      border-radius: 4px;
-      overflow: hidden;
-    }
-    #progressFill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
-      width: 0%;
-      transition: width .3s;
-    }
+    #progressWrap { background: var(--surface); border-bottom: 1px solid var(--border); padding: 6px 16px; display: none; flex-direction: column; gap: 4px; flex-shrink: 0; }
+    #progressBar { height: 4px; background: var(--border); border-radius: 4px; overflow: hidden; }
+    #progressFill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); width: 0%; transition: width .3s; }
     #progressLabel { font-size: 11px; color: var(--text-muted); }
 
-    /* ── MAIN LAYOUT ── */
-    #main {
-      display: flex;
-      flex: 1;
-      overflow: hidden;
-    }
+    /* ── STATS BAR ── */
+    #statsbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 5px 16px; display: flex; gap: 20px; align-items: center; flex-shrink: 0; flex-wrap: wrap; }
+    .stat { display: flex; flex-direction: column; align-items: center; }
+    .stat-val { font-size: 16px; font-weight: 700; }
+    .stat-lbl { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; }
+    .s-ok { color: var(--ok); } .s-warn { color: var(--warn); } .s-err { color: var(--err); } .s-acc { color: var(--accent2); } .s-muted { color: var(--text-muted); }
 
-    /* ── GRAPH ── */
-    #graphWrap {
-      flex: 1;
-      position: relative;
-      overflow: hidden;
-    }
-    #graph { width: 100%; height: 100%; }
-    .node circle { cursor: pointer; stroke-width: 1.5px; }
-    .node circle:hover { stroke: #fff !important; stroke-width: 2.5px; }
-    .node.highlighted circle { stroke: #fff; stroke-width: 3px; }
-    .link { stroke: #3a3f5c; stroke-opacity: 0.5; fill: none; }
-    .link.highlighted { stroke: var(--accent2); stroke-opacity: 1; }
+    /* ── MAIN ── */
+    #main { display: flex; flex: 1; overflow: hidden; }
 
-    #graphEmpty {
-      position: absolute; inset: 0;
-      display: flex; align-items: center; justify-content: center;
-      flex-direction: column; gap: 12px;
-      pointer-events: none;
-    }
-    #graphEmpty .icon { font-size: 48px; opacity: .3; }
-    #graphEmpty p { color: var(--text-muted); font-size: 14px; }
+    /* ── GRAPH AREA ── */
+    #graphWrap { flex: 1; position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    #graphCanvas { display: none; width: 100%; height: 100%; }
+    #graphEmpty { display: flex; flex-direction: column; align-items: center; gap: 10px; pointer-events: none; }
+    #graphEmpty .icon { font-size: 44px; opacity: .25; }
+    #graphEmpty p { color: var(--text-muted); font-size: 13px; text-align: center; max-width: 300px; }
+
+    /* Crawl live view */
+    #crawlLive { display: none; width: 100%; height: 100%; flex-direction: column; overflow: hidden; }
+    #crawlCounter { padding: 20px 24px 10px; }
+    #crawlCounter .big { font-size: 42px; font-weight: 700; color: var(--accent); }
+    #crawlCounter .sub { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+    #liveTableWrap { flex: 1; overflow-y: auto; }
+    #liveTable { width: 100%; border-collapse: collapse; font-size: 12px; }
+    #liveTable th { background: var(--surface2); padding: 6px 10px; text-align: left; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; position: sticky; top: 0; }
+    #liveTable td { padding: 5px 10px; border-bottom: 1px solid var(--border); }
+    #liveTable tr:hover { background: var(--surface2); }
+
+    /* Generate button */
+    #genGraphBtn { display: none; margin: 20px auto; padding: 12px 28px; background: var(--accent); color: #fff; border-radius: 8px; border: none; cursor: pointer; font-size: 14px; font-weight: 600; }
+    #genGraphBtn:hover { opacity: .85; }
+
+    /* Graph controls */
+    #graphControls { position: absolute; bottom: 12px; left: 12px; display: none; gap: 8px; align-items: center; z-index: 10; }
+    #graphControls.visible { display: flex; }
+    #graphControls select, #graphControls input { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 5px 8px; border-radius: 5px; font-size: 12px; outline: none; }
+    #graphControls label { font-size: 12px; color: var(--text-muted); }
 
     /* ── TOOLTIP ── */
-    #tooltip {
-      position: fixed;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 10px 14px;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity .15s;
-      max-width: 320px;
-      z-index: 100;
-      box-shadow: 0 8px 32px #0008;
-    }
+    #tooltip { position: fixed; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; pointer-events: none; opacity: 0; transition: opacity .1s; max-width: 300px; z-index: 200; box-shadow: 0 8px 32px #0008; }
     #tooltip.visible { opacity: 1; }
-    .tt-url { font-size: 11px; color: var(--accent); word-break: break-all; margin-bottom: 6px; }
-    .tt-title { font-weight: 600; margin-bottom: 8px; }
-    .tt-grid { display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; font-size: 12px; }
-    .tt-lbl { color: var(--text-muted); }
-    .tt-val { color: var(--text); font-weight: 500; }
+    .tt-url { font-size: 11px; color: var(--accent); word-break: break-all; margin-bottom: 5px; }
+    .tt-title { font-weight: 600; margin-bottom: 7px; font-size: 13px; }
+    .tt-grid { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; font-size: 12px; }
+    .tt-lbl { color: var(--text-muted); } .tt-val { color: var(--text); font-weight: 500; }
 
     /* ── SIDE PANEL ── */
-    #panel {
-      width: 440px;
-      background: var(--surface);
-      border-left: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      flex-shrink: 0;
-    }
-    #panelHeader {
-      padding: 10px 14px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
+    #panel { width: 420px; background: var(--surface); border-left: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0; }
+    #panelHeader { padding: 8px 12px; border-bottom: 1px solid var(--border); display: flex; gap: 7px; flex-wrap: wrap; align-items: center; }
     #panelHeader h2 { font-size: 13px; font-weight: 600; flex: 1; }
-    select, #filterSearch {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 5px 8px;
-      border-radius: 5px;
-      font-size: 12px;
-      outline: none;
-    }
-    #filterSearch { flex: 1; min-width: 120px; }
-
+    select, #filterSearch { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 5px 7px; border-radius: 5px; font-size: 12px; outline: none; }
+    #filterSearch { flex: 1; min-width: 100px; }
     #tableWrap { flex: 1; overflow-y: auto; }
     table { width: 100%; border-collapse: collapse; }
-    thead th {
-      background: var(--surface2);
-      padding: 7px 10px;
-      text-align: left;
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: .05em;
-      cursor: pointer;
-      position: sticky;
-      top: 0;
-      user-select: none;
-      white-space: nowrap;
-    }
+    thead th { background: var(--surface2); padding: 6px 8px; text-align: left; font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; cursor: pointer; position: sticky; top: 0; user-select: none; white-space: nowrap; }
     thead th:hover { color: var(--text); }
-    thead th .sort-icon { margin-left: 4px; opacity: .5; }
-    tbody tr {
-      border-bottom: 1px solid var(--border);
-      cursor: pointer;
-      transition: background .1s;
-    }
+    tbody tr { border-bottom: 1px solid var(--border); cursor: pointer; transition: background .1s; }
     tbody tr:hover { background: var(--surface2); }
     tbody tr.selected { background: #7c6cff22; }
-    tbody td { padding: 6px 10px; font-size: 12px; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .badge {
-      display: inline-block;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 11px;
-      font-weight: 700;
-    }
-    .b-ok   { background: #22c55e22; color: var(--ok); }
+    tbody td { padding: 5px 8px; font-size: 12px; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .badge { display: inline-block; padding: 2px 5px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+    .b-ok { background: #22c55e22; color: var(--ok); }
     .b-warn { background: #f59e0b22; color: var(--warn); }
-    .b-err  { background: #ef444422; color: var(--err); }
-    .b-unk  { background: #8892b022; color: var(--text-muted); }
-
-    /* Scrollbar */
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: var(--surface); }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    .b-err { background: #ef444422; color: var(--err); }
+    .b-unk { background: #8892b022; color: var(--text-muted); }
+    ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-track { background: var(--surface); } ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
   </style>
 </head>
 <body>
@@ -256,19 +124,42 @@
 <!-- TOP BAR -->
 <div id="topbar">
   <h1>SEO <span>Crawler</span></h1>
+  <button id="btnOptions">⚙ Options</button>
   <input id="urlInput" type="url" placeholder="https://example.com" />
-  <div class="cfg-row">
-    <label>Max URLs</label>
-    <input id="maxUrls" type="number" value="200" min="1" max="2000" />
-  </div>
-  <div class="cfg-row">
-    <label>Délai (s)</label>
-    <input id="crawlDelay" type="number" value="0.5" min="0" max="10" step="0.1" />
-  </div>
+  <div class="cfg-row"><label>Max URLs</label><input id="maxUrls" type="number" value="200" min="1" max="2000" /></div>
+  <div class="cfg-row"><label>Délai (s)</label><input id="crawlDelay" type="number" value="0.5" min="0" max="10" step="0.1" /></div>
   <button id="btnStart">▶ Lancer</button>
   <button id="btnStop">■ Stopper</button>
-  <button id="btnLoad">📂 Charger JSON</button>
+  <button id="btnLoad">📂 JSON</button>
   <input id="fileInput" type="file" accept=".json" />
+</div>
+
+<!-- OPTIONS PANEL -->
+<div id="optionsPanel">
+  <div class="opt-grid">
+    <div class="opt-section">
+      <h3>Comportement</h3>
+      <div class="toggle-row"><input type="checkbox" id="optRobots" checked /><label for="optRobots">Respecter robots.txt</label></div>
+      <div class="toggle-row"><input type="checkbox" id="optFilterExt" checked /><label for="optFilterExt">Exclure extensions médias / assets</label></div>
+      <div class="toggle-row"><input type="checkbox" id="optStripParams" /><label for="optStripParams">Ignorer les paramètres URL (?param=…)</label></div>
+    </div>
+    <div class="opt-section">
+      <h3>Sitemap</h3>
+      <div class="toggle-row"><input type="radio" name="sitemapMode" id="smDiscover" value="discover" checked /><label for="smDiscover">Utiliser le sitemap pour découverte</label></div>
+      <div class="toggle-row"><input type="radio" name="sitemapMode" id="smExclude" value="exclude" /><label for="smExclude">Exclure les URLs présentes dans le sitemap</label></div>
+      <div class="toggle-row"><input type="radio" name="sitemapMode" id="smIgnore" value="ignore" /><label for="smIgnore">Ignorer le sitemap</label></div>
+    </div>
+    <div class="opt-section">
+      <h3>Exclure par préfixe</h3>
+      <span class="opt-ta-lbl">Une règle par ligne (ex : /admin, /panier)</span>
+      <textarea class="opt-ta" id="optPrefixes" rows="3" placeholder="/admin&#10;/panier&#10;/compte"></textarea>
+    </div>
+    <div class="opt-section">
+      <h3>Exclure par mot-clé</h3>
+      <span class="opt-ta-lbl">Une règle par ligne (ex : utm_, session)</span>
+      <textarea class="opt-ta" id="optKeywords" rows="3" placeholder="utm_&#10;session&#10;print"></textarea>
+    </div>
+  </div>
 </div>
 
 <!-- PROGRESS -->
@@ -283,23 +174,64 @@
   <div class="stat"><span class="stat-val s-ok" id="st-200">—</span><span class="stat-lbl">200 OK</span></div>
   <div class="stat"><span class="stat-val s-warn" id="st-3xx">—</span><span class="stat-lbl">3xx</span></div>
   <div class="stat"><span class="stat-val s-err" id="st-err">—</span><span class="stat-lbl">Erreurs</span></div>
-  <div class="stat"><span class="stat-val s-acc" id="st-depth">—</span><span class="stat-lbl">Profondeur max</span></div>
+  <div class="stat"><span class="stat-val s-acc" id="st-depth">—</span><span class="stat-lbl">Depth max</span></div>
+  <div class="stat"><span class="stat-val s-muted" id="st-robots">—</span><span class="stat-lbl">Bloquées robots</span></div>
 </div>
 
 <!-- MAIN -->
 <div id="main">
   <div id="graphWrap">
-    <svg id="graph"></svg>
+
+    <!-- Empty state -->
     <div id="graphEmpty">
       <div class="icon">🕸️</div>
       <p>Lancez un crawl ou chargez un fichier JSON pour visualiser le graphe</p>
     </div>
+
+    <!-- Live crawl view (no graph) -->
+    <div id="crawlLive">
+      <div id="crawlCounter">
+        <div class="big" id="liveCount">0</div>
+        <div class="sub" id="liveStatus">Pages crawlées…</div>
+      </div>
+      <div id="liveTableWrap">
+        <table id="liveTable">
+          <thead><tr><th>URL</th><th>Titre</th><th>Status</th><th>Depth</th></tr></thead>
+          <tbody id="liveBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Generate graph button (shown after crawl) -->
+    <button id="genGraphBtn">⚡ Générer le graphe</button>
+
+    <!-- Canvas for graph -->
+    <canvas id="graphCanvas"></canvas>
+
+    <!-- Graph display controls -->
+    <div id="graphControls">
+      <label>Afficher les</label>
+      <select id="graphLimit">
+        <option value="50">50</option>
+        <option value="100" selected>100</option>
+        <option value="250">250</option>
+        <option value="0">Tout</option>
+      </select>
+      <label>premières pages par</label>
+      <select id="graphSortBy">
+        <option value="inlinks_count">Inlinks</option>
+        <option value="depth">Profondeur</option>
+        <option value="status_code">Status</option>
+        <option value="word_count">Mots</option>
+      </select>
+    </div>
   </div>
 
+  <!-- Side panel -->
   <div id="panel">
     <div id="panelHeader">
       <h2>Pages crawlées</h2>
-      <input id="filterSearch" type="search" placeholder="Filtrer par URL / titre…" />
+      <input id="filterSearch" type="search" placeholder="Filtrer…" />
       <select id="filterStatus">
         <option value="">Tous statuts</option>
         <option value="200">200 OK</option>
@@ -308,20 +240,18 @@
         <option value="5xx">5xx</option>
         <option value="0">Erreur</option>
       </select>
-      <select id="filterDepth">
-        <option value="">Toutes profondeurs</option>
-      </select>
+      <select id="filterDepth"><option value="">Toutes depths</option></select>
     </div>
     <div id="tableWrap">
       <table>
         <thead>
           <tr>
-            <th data-col="url">URL <span class="sort-icon">↕</span></th>
-            <th data-col="title">Titre <span class="sort-icon">↕</span></th>
-            <th data-col="status_code">Status <span class="sort-icon">↕</span></th>
-            <th data-col="depth">Depth <span class="sort-icon">↕</span></th>
-            <th data-col="inlinks_count">In <span class="sort-icon">↕</span></th>
-            <th data-col="outlinks_count">Out <span class="sort-icon">↕</span></th>
+            <th data-col="url">URL <span>↕</span></th>
+            <th data-col="title">Titre <span>↕</span></th>
+            <th data-col="status_code">Status <span>↕</span></th>
+            <th data-col="depth">Depth <span>↕</span></th>
+            <th data-col="inlinks_count">In <span>↕</span></th>
+            <th data-col="outlinks_count">Out <span>↕</span></th>
           </tr>
         </thead>
         <tbody id="tableBody"></tbody>
@@ -334,280 +264,235 @@
   <div class="tt-url" id="tt-url"></div>
   <div class="tt-title" id="tt-title"></div>
   <div class="tt-grid">
-    <span class="tt-lbl">Status</span>      <span class="tt-val" id="tt-status"></span>
-    <span class="tt-lbl">Profondeur</span>  <span class="tt-val" id="tt-depth"></span>
-    <span class="tt-lbl">Inlinks</span>     <span class="tt-val" id="tt-inlinks"></span>
-    <span class="tt-lbl">Outlinks</span>    <span class="tt-val" id="tt-outlinks"></span>
-    <span class="tt-lbl">Mots</span>        <span class="tt-val" id="tt-words"></span>
-    <span class="tt-lbl">H1</span>          <span class="tt-val" id="tt-h1"></span>
+    <span class="tt-lbl">Status</span>     <span class="tt-val" id="tt-status"></span>
+    <span class="tt-lbl">Profondeur</span> <span class="tt-val" id="tt-depth"></span>
+    <span class="tt-lbl">Inlinks</span>    <span class="tt-val" id="tt-inlinks"></span>
+    <span class="tt-lbl">Outlinks</span>   <span class="tt-val" id="tt-outlinks"></span>
+    <span class="tt-lbl">Mots</span>       <span class="tt-val" id="tt-words"></span>
+    <span class="tt-lbl">H1</span>         <span class="tt-val" id="tt-h1"></span>
   </div>
 </div>
 
 <script>
-/* ════════════════════════════════════════════
+/* ═══════════════════════════════════════════
    STATE
-════════════════════════════════════════════ */
-let graphData = null;
-let simulation = null;
-let ws = null;
-let sortCol = "inlinks_count";
-let sortDir = -1;
+═══════════════════════════════════════════ */
+let graphData = null;          // full JSON from server
+let graphNodes = [];           // subset rendered in canvas
+let nodePositions = {};        // id → {x, y}
 let selectedNodeId = null;
+let hoveredNode = null;
+let sortCol = "inlinks_count", sortDir = -1;
+let canvasTransform = d3.zoomIdentity;
+let graphReady = false;
+let liveRows = [];
 
-/* ════════════════════════════════════════════
+/* ═══════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════ */
+const statusColor = c => c === 200 ? "#22c55e" : c >= 300 && c < 400 ? "#f59e0b" : c >= 400 ? "#ef4444" : "#6b7280";
+const statusBadge = c => {
+  if (c === 200) return `<span class="badge b-ok">200</span>`;
+  if (c >= 300 && c < 400) return `<span class="badge b-warn">${c}</span>`;
+  if (c >= 400) return `<span class="badge b-err">${c}</span>`;
+  return `<span class="badge b-unk">${c || "Err"}</span>`;
+};
+const nodeRadius = n => {
+  const maxIn = Math.max(1, ...graphNodes.map(x => x.inlinks_count));
+  return Math.max(4, Math.min(22, 5 + (n.inlinks_count / maxIn) * 17));
+};
+const shortUrl = url => { try { const u = new URL(url); const p = u.pathname + u.search; return p.length > 38 ? p.slice(0, 38) + "…" : p || "/"; } catch { return url; } };
+
+/* ═══════════════════════════════════════════
+   OPTIONS — localStorage persistence
+═══════════════════════════════════════════ */
+const PREF_KEY = "seoCrawlerPrefs";
+
+function savePrefs() {
+  const prefs = {
+    url: document.getElementById("urlInput").value,
+    maxUrls: document.getElementById("maxUrls").value,
+    delay: document.getElementById("crawlDelay").value,
+    robots: document.getElementById("optRobots").checked,
+    filterExt: document.getElementById("optFilterExt").checked,
+    stripParams: document.getElementById("optStripParams").checked,
+    sitemapMode: document.querySelector('input[name="sitemapMode"]:checked')?.value || "discover",
+    prefixes: document.getElementById("optPrefixes").value,
+    keywords: document.getElementById("optKeywords").value,
+  };
+  localStorage.setItem(PREF_KEY, JSON.stringify(prefs));
+}
+
+function loadPrefs() {
+  try {
+    const p = JSON.parse(localStorage.getItem(PREF_KEY) || "{}");
+    if (p.url) document.getElementById("urlInput").value = p.url;
+    if (p.maxUrls) document.getElementById("maxUrls").value = p.maxUrls;
+    if (p.delay) document.getElementById("crawlDelay").value = p.delay;
+    if (p.robots !== undefined) document.getElementById("optRobots").checked = p.robots;
+    if (p.filterExt !== undefined) document.getElementById("optFilterExt").checked = p.filterExt;
+    if (p.stripParams !== undefined) document.getElementById("optStripParams").checked = p.stripParams;
+    if (p.sitemapMode) { const r = document.querySelector(`input[name="sitemapMode"][value="${p.sitemapMode}"]`); if (r) r.checked = true; }
+    if (p.prefixes) document.getElementById("optPrefixes").value = p.prefixes;
+    if (p.keywords) document.getElementById("optKeywords").value = p.keywords;
+  } catch {}
+}
+
+function buildConfig() {
+  return {
+    respect_robots: document.getElementById("optRobots").checked,
+    filter_extensions: document.getElementById("optFilterExt").checked,
+    strip_params: document.getElementById("optStripParams").checked,
+    sitemap_mode: document.querySelector('input[name="sitemapMode"]:checked')?.value || "discover",
+    exclude_prefixes: document.getElementById("optPrefixes").value.split("\n").filter(Boolean),
+    exclude_keywords: document.getElementById("optKeywords").value.split("\n").filter(Boolean),
+  };
+}
+
+// Auto-save prefs on any change
+document.querySelectorAll("#optionsPanel input, #optionsPanel textarea, #urlInput, #maxUrls, #crawlDelay")
+  .forEach(el => el.addEventListener("change", savePrefs));
+
+/* ═══════════════════════════════════════════
    WEBSOCKET
-════════════════════════════════════════════ */
+═══════════════════════════════════════════ */
+let ws;
 function connectWS() {
   const proto = location.protocol === "https:" ? "wss" : "ws";
   ws = new WebSocket(`${proto}://${location.host}/ws`);
-
   ws.onmessage = (evt) => {
     const msg = JSON.parse(evt.data);
-    if (msg.type === "progress") {
-      showProgress(msg.crawled, msg.total_queued, msg.current_url);
-    } else if (msg.type === "done") {
-      hideProgress();
-      fetchData();
-      setBtnState(false);
-    } else if (msg.type === "error") {
-      hideProgress();
-      setBtnState(false);
-      alert("Erreur crawl : " + msg.message);
-    } else if (msg.type === "state" && msg.running) {
-      setBtnState(true);
-      document.getElementById("progressWrap").style.display = "flex";
-    }
+    if (msg.type === "progress") onProgress(msg);
+    else if (msg.type === "done") onCrawlDone(msg);
+    else if (msg.type === "error") { hideProgress(); setBtnState(false); showEmpty(); alert("Erreur : " + msg.message); }
+    else if (msg.type === "state" && msg.running) { setBtnState(true); showCrawlLive(); document.getElementById("progressWrap").style.display = "flex"; }
   };
   ws.onclose = () => setTimeout(connectWS, 3000);
 }
 
-/* ════════════════════════════════════════════
-   PROGRESS
-════════════════════════════════════════════ */
-function showProgress(crawled, total, url) {
-  const wrap = document.getElementById("progressWrap");
-  wrap.style.display = "flex";
-  const pct = total > 0 ? Math.min(100, (crawled / total) * 100) : 0;
+/* ═══════════════════════════════════════════
+   CRAWL EVENTS
+═══════════════════════════════════════════ */
+function onProgress(msg) {
+  document.getElementById("progressWrap").style.display = "flex";
+  const pct = msg.total_queued > 0 ? Math.min(100, (msg.crawled / msg.total_queued) * 100) : 0;
   document.getElementById("progressFill").style.width = pct + "%";
-  const short = url.length > 70 ? "…" + url.slice(-70) : url;
-  document.getElementById("progressLabel").textContent =
-    `Crawl en cours : ${crawled} / ${total} pages  —  ${short}`;
+  const short = msg.current_url.length > 60 ? "…" + msg.current_url.slice(-60) : msg.current_url;
+  document.getElementById("progressLabel").textContent = `${msg.crawled} / ${msg.total_queued} pages — ${short}`;
+  document.getElementById("liveCount").textContent = msg.crawled;
+  document.getElementById("liveStatus").textContent = `pages crawlées — ${msg.robots_blocked || 0} bloquées robots.txt`;
+  document.getElementById("st-robots").textContent = msg.robots_blocked || 0;
+  addLiveRow(msg.current_url);
 }
-function hideProgress() {
-  document.getElementById("progressWrap").style.display = "none";
+
+function onCrawlDone(msg) {
+  hideProgress();
+  setBtnState(false);
+  const stopped = msg.stopped;
+  hideCrawlLive();
+  fetchData(stopped);
+}
+
+function addLiveRow(url) {
+  liveRows.unshift({ url });
+  if (liveRows.length > 200) liveRows.pop();
+  const tbody = document.getElementById("liveBody");
+  const short = shortUrl(url);
+  const tr = document.createElement("tr");
+  tr.innerHTML = `<td title="${url}">${short}</td><td>—</td><td>—</td><td>—</td>`;
+  tbody.prepend(tr);
+  while (tbody.children.length > 200) tbody.removeChild(tbody.lastChild);
+}
+
+/* ═══════════════════════════════════════════
+   VIEW STATE
+═══════════════════════════════════════════ */
+function showEmpty() {
+  document.getElementById("graphEmpty").style.display = "flex";
+  document.getElementById("crawlLive").style.display = "none";
+  document.getElementById("genGraphBtn").style.display = "none";
+  document.getElementById("graphCanvas").style.display = "none";
+  document.getElementById("graphControls").classList.remove("visible");
+  graphReady = false;
+}
+function showCrawlLive() {
+  document.getElementById("graphEmpty").style.display = "none";
+  document.getElementById("crawlLive").style.display = "flex";
+  document.getElementById("genGraphBtn").style.display = "none";
+  document.getElementById("graphCanvas").style.display = "none";
+  document.getElementById("graphControls").classList.remove("visible");
+  liveRows = [];
+  document.getElementById("liveBody").innerHTML = "";
+}
+function showGenButton(stopped) {
+  document.getElementById("graphEmpty").style.display = "none";
+  document.getElementById("crawlLive").style.display = "none";
+  const btn = document.getElementById("genGraphBtn");
+  btn.textContent = stopped
+    ? `⚡ Générer le graphe (${graphData.meta.total_pages} pages crawlées avant arrêt)`
+    : `⚡ Générer le graphe (${graphData.meta.total_pages} pages)`;
+  btn.style.display = "block";
+  document.getElementById("graphCanvas").style.display = "none";
+  document.getElementById("graphControls").classList.remove("visible");
+}
+function showCanvas() {
+  document.getElementById("graphEmpty").style.display = "none";
+  document.getElementById("crawlLive").style.display = "none";
+  document.getElementById("genGraphBtn").style.display = "none";
+  document.getElementById("graphCanvas").style.display = "block";
+  document.getElementById("graphControls").classList.add("visible");
+  graphReady = true;
 }
 
 function setBtnState(running) {
   document.getElementById("btnStart").style.display = running ? "none" : "";
   document.getElementById("btnStop").style.display  = running ? "" : "none";
 }
+function hideProgress() { document.getElementById("progressWrap").style.display = "none"; }
+function hideCrawlLive() { document.getElementById("crawlLive").style.display = "none"; }
 
-/* ════════════════════════════════════════════
-   FETCH DATA
-════════════════════════════════════════════ */
-async function fetchData() {
+/* ═══════════════════════════════════════════
+   DATA
+═══════════════════════════════════════════ */
+async function fetchData(stopped = false) {
   try {
     const r = await fetch("/api/data");
-    if (!r.ok) return;
+    if (!r.ok) { showEmpty(); return; }
     graphData = await r.json();
-    renderAll();
+    updateStats(graphData.nodes, graphData.meta);
+    renderTable();
+    showGenButton(stopped || graphData.meta.stopped);
   } catch(e) { console.error(e); }
 }
 
-/* ════════════════════════════════════════════
+/* ═══════════════════════════════════════════
    STATS
-════════════════════════════════════════════ */
-function updateStats(nodes) {
+═══════════════════════════════════════════ */
+function updateStats(nodes, meta = {}) {
   const ok   = nodes.filter(n => n.status_code === 200).length;
   const rxx  = nodes.filter(n => n.status_code >= 300 && n.status_code < 400).length;
   const err  = nodes.filter(n => n.status_code >= 400 || n.status_code === 0).length;
-  const dep  = Math.max(...nodes.map(n => n.depth), 0);
-  document.getElementById("st-total").textContent = nodes.length;
-  document.getElementById("st-200").textContent   = ok;
-  document.getElementById("st-3xx").textContent   = rxx;
-  document.getElementById("st-err").textContent   = err;
-  document.getElementById("st-depth").textContent = dep;
+  const dep  = meta.max_depth ?? Math.max(...nodes.map(n => n.depth), 0);
+  document.getElementById("st-total").textContent  = nodes.length;
+  document.getElementById("st-200").textContent    = ok;
+  document.getElementById("st-3xx").textContent    = rxx;
+  document.getElementById("st-err").textContent    = err;
+  document.getElementById("st-depth").textContent  = dep;
+  document.getElementById("st-robots").textContent = meta.robots_blocked ?? "—";
 
-  // Populate depth filter
   const sel = document.getElementById("filterDepth");
   const prev = sel.value;
-  sel.innerHTML = '<option value="">Toutes profondeurs</option>';
-  const depths = [...new Set(nodes.map(n => n.depth))].sort((a,b) => a-b);
-  depths.forEach(d => {
+  sel.innerHTML = '<option value="">Toutes depths</option>';
+  [...new Set(nodes.map(n => n.depth))].sort((a,b)=>a-b).forEach(d => {
     const o = document.createElement("option");
-    o.value = d; o.textContent = "Depth " + d;
-    sel.appendChild(o);
+    o.value = d; o.textContent = "Depth " + d; sel.appendChild(o);
   });
   sel.value = prev;
 }
 
-/* ════════════════════════════════════════════
-   STATUS HELPERS
-════════════════════════════════════════════ */
-function statusColor(code) {
-  if (code === 200) return "#22c55e";
-  if (code >= 300 && code < 400) return "#f59e0b";
-  if (code >= 400) return "#ef4444";
-  return "#6b7280";
-}
-function statusBadge(code) {
-  if (code === 200) return `<span class="badge b-ok">${code}</span>`;
-  if (code >= 300 && code < 400) return `<span class="badge b-warn">${code}</span>`;
-  if (code >= 400) return `<span class="badge b-err">${code}</span>`;
-  return `<span class="badge b-unk">${code || "Err"}</span>`;
-}
-
-/* ════════════════════════════════════════════
-   D3 FORCE GRAPH
-════════════════════════════════════════════ */
-function renderGraph(data) {
-  document.getElementById("graphEmpty").style.display = "none";
-  const svg = d3.select("#graph");
-  svg.selectAll("*").remove();
-
-  const W = svg.node().clientWidth || 900;
-  const H = svg.node().clientHeight || 600;
-
-  const defs = svg.append("defs");
-  defs.append("marker")
-    .attr("id", "arrow")
-    .attr("viewBox", "0 -4 8 8")
-    .attr("refX", 14).attr("refY", 0)
-    .attr("markerWidth", 5).attr("markerHeight", 5)
-    .attr("orient", "auto")
-    .append("path")
-    .attr("d", "M0,-4L8,0L0,4")
-    .attr("fill", "#4a5080");
-
-  const g = svg.append("g");
-
-  // Zoom
-  const zoom = d3.zoom()
-    .scaleExtent([0.05, 6])
-    .on("zoom", (e) => g.attr("transform", e.transform));
-  svg.call(zoom);
-
-  const maxIn = Math.max(1, d3.max(data.nodes, n => n.inlinks_count));
-  const nodeRadius = d => Math.max(4, Math.min(24, 5 + (n => n * 18)(d.inlinks_count / maxIn)));
-
-  // Simulation
-  simulation = d3.forceSimulation(data.nodes)
-    .force("link", d3.forceLink(data.edges)
-      .id(d => d.id)
-      .distance(60)
-      .strength(0.3))
-    .force("charge", d3.forceManyBody().strength(-120))
-    .force("center", d3.forceCenter(W / 2, H / 2))
-    .force("collision", d3.forceCollide(d => nodeRadius(d) + 3));
-
-  const link = g.append("g").selectAll("path")
-    .data(data.edges)
-    .join("path")
-    .attr("class", "link")
-    .attr("marker-end", "url(#arrow)");
-
-  const node = g.append("g").selectAll("g")
-    .data(data.nodes)
-    .join("g")
-    .attr("class", "node")
-    .attr("data-id", d => d.id)
-    .call(d3.drag()
-      .on("start", (e, d) => {
-        if (!e.active) simulation.alphaTarget(0.3).restart();
-        d.fx = d.x; d.fy = d.y;
-      })
-      .on("drag", (e, d) => { d.fx = e.x; d.fy = e.y; })
-      .on("end", (e, d) => {
-        if (!e.active) simulation.alphaTarget(0);
-        d.fx = null; d.fy = null;
-      }));
-
-  node.append("circle")
-    .attr("r", d => nodeRadius(d))
-    .attr("fill", d => statusColor(d.status_code))
-    .attr("fill-opacity", 0.85)
-    .attr("stroke", d => statusColor(d.status_code))
-    .attr("stroke-opacity", 0.4);
-
-  const tooltip = document.getElementById("tooltip");
-
-  node.on("mousemove", (e, d) => {
-    tooltip.classList.add("visible");
-    const short = d.url.length > 60 ? d.url.slice(0, 60) + "…" : d.url;
-    document.getElementById("tt-url").textContent = d.url;
-    document.getElementById("tt-title").textContent = d.title || "(sans titre)";
-    document.getElementById("tt-status").textContent  = d.status_code || "Erreur";
-    document.getElementById("tt-depth").textContent   = d.depth;
-    document.getElementById("tt-inlinks").textContent = d.inlinks_count;
-    document.getElementById("tt-outlinks").textContent= d.outlinks_count;
-    document.getElementById("tt-words").textContent   = d.word_count.toLocaleString();
-    document.getElementById("tt-h1").textContent      = d.h1.join(" / ") || "—";
-    tooltip.style.left = (e.clientX + 16) + "px";
-    tooltip.style.top  = (e.clientY - 10) + "px";
-  })
-  .on("mouseleave", () => tooltip.classList.remove("visible"))
-  .on("click", (e, d) => {
-    e.stopPropagation();
-    highlightNode(d.id);
-    selectTableRow(d.id);
-  });
-
-  simulation.on("tick", () => {
-    link.attr("d", d => {
-      const dx = d.target.x - d.source.x;
-      const dy = d.target.y - d.source.y;
-      const dr = Math.sqrt(dx * dx + dy * dy);
-      return `M${d.source.x},${d.source.y}A${dr},${dr} 0 0,1 ${d.target.x},${d.target.y}`;
-    });
-    node.attr("transform", d => `translate(${d.x},${d.y})`);
-  });
-
-  svg.on("click", () => {
-    clearHighlight();
-    clearTableSelection();
-  });
-
-  window._graphNode = node;
-  window._graphLink = link;
-  window._graphData = data;
-
-  // auto-fit after settle
-  setTimeout(() => {
-    if (!graphData) return;
-    const bounds = g.node().getBBox();
-    if (!bounds.width) return;
-    const pad = 40;
-    const scale = Math.min(
-      (W - pad * 2) / bounds.width,
-      (H - pad * 2) / bounds.height,
-      1.5
-    );
-    const tx = W / 2 - scale * (bounds.x + bounds.width / 2);
-    const ty = H / 2 - scale * (bounds.y + bounds.height / 2);
-    svg.transition().duration(600)
-      .call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
-  }, 2500);
-}
-
-function highlightNode(id) {
-  selectedNodeId = id;
-  if (!window._graphNode) return;
-  window._graphNode.classed("highlighted", d => d.id === id);
-  // highlight connected links
-  window._graphLink.classed("highlighted", d =>
-    d.source.id === id || d.target.id === id
-  );
-}
-function clearHighlight() {
-  selectedNodeId = null;
-  if (!window._graphNode) return;
-  window._graphNode.classed("highlighted", false);
-  window._graphLink.classed("highlighted", false);
-}
-
-/* ════════════════════════════════════════════
+/* ═══════════════════════════════════════════
    TABLE
-════════════════════════════════════════════ */
+═══════════════════════════════════════════ */
 function renderTable() {
   if (!graphData) return;
   const search = document.getElementById("filterSearch").value.toLowerCase();
@@ -615,22 +500,18 @@ function renderTable() {
   const depth  = document.getElementById("filterDepth").value;
 
   let rows = graphData.nodes.filter(n => {
-    const matchSearch = !search || n.url.toLowerCase().includes(search) || n.title.toLowerCase().includes(search);
-    let matchStatus = true;
-    if (status === "200") matchStatus = n.status_code === 200;
-    else if (status === "3xx") matchStatus = n.status_code >= 300 && n.status_code < 400;
-    else if (status === "4xx") matchStatus = n.status_code >= 400 && n.status_code < 500;
-    else if (status === "5xx") matchStatus = n.status_code >= 500;
-    else if (status === "0")   matchStatus = n.status_code === 0;
-    const matchDepth = depth === "" || n.depth === parseInt(depth);
-    return matchSearch && matchStatus && matchDepth;
+    const ms = !search || n.url.toLowerCase().includes(search) || n.title.toLowerCase().includes(search);
+    let mst = true;
+    if (status === "200") mst = n.status_code === 200;
+    else if (status === "3xx") mst = n.status_code >= 300 && n.status_code < 400;
+    else if (status === "4xx") mst = n.status_code >= 400 && n.status_code < 500;
+    else if (status === "5xx") mst = n.status_code >= 500;
+    else if (status === "0")   mst = n.status_code === 0;
+    const md = depth === "" || n.depth === parseInt(depth);
+    return ms && mst && md;
   });
 
-  rows.sort((a, b) => sortDir * (
-    typeof a[sortCol] === "string"
-      ? a[sortCol].localeCompare(b[sortCol])
-      : (a[sortCol] - b[sortCol])
-  ));
+  rows.sort((a, b) => sortDir * (typeof a[sortCol] === "string" ? a[sortCol].localeCompare(b[sortCol]) : (a[sortCol] - b[sortCol])));
 
   const tbody = document.getElementById("tableBody");
   tbody.innerHTML = rows.map(n => `
@@ -641,59 +522,281 @@ function renderTable() {
       <td>${n.depth}</td>
       <td>${n.inlinks_count}</td>
       <td>${n.outlinks_count}</td>
-    </tr>
-  `).join("");
+    </tr>`).join("");
 
   tbody.querySelectorAll("tr").forEach(tr => {
     tr.addEventListener("click", () => {
       const id = parseInt(tr.dataset.id);
-      highlightNode(id);
-      selectTableRow(id);
+      selectedNodeId = id;
+      highlightTableRow(id);
+      if (graphReady) drawCanvas();
     });
   });
 }
 
-function shortUrl(url) {
-  try {
-    const u = new URL(url);
-    const p = u.pathname + u.search;
-    return p.length > 40 ? p.slice(0, 40) + "…" : p || "/";
-  } catch { return url; }
+function highlightTableRow(id) {
+  document.querySelectorAll("#tableBody tr").forEach(tr => tr.classList.toggle("selected", parseInt(tr.dataset.id) === id));
+  document.querySelector(`#tableBody tr[data-id="${id}"]`)?.scrollIntoView({ block: "nearest" });
 }
 
-function selectTableRow(id) {
-  selectedNodeId = id;
-  document.querySelectorAll("#tableBody tr").forEach(tr => {
-    tr.classList.toggle("selected", parseInt(tr.dataset.id) === id);
-  });
-  const sel = document.querySelector(`#tableBody tr[data-id="${id}"]`);
-  if (sel) sel.scrollIntoView({ block: "nearest" });
-}
-function clearTableSelection() {
-  selectedNodeId = null;
-  document.querySelectorAll("#tableBody tr").forEach(tr => tr.classList.remove("selected"));
-}
-
-/* ════════════════════════════════════════════
-   RENDER ALL
-════════════════════════════════════════════ */
-function renderAll() {
+/* ═══════════════════════════════════════════
+   GRAPH SUBSET SELECTION
+═══════════════════════════════════════════ */
+function buildGraphSubset() {
   if (!graphData) return;
-  updateStats(graphData.nodes);
-  renderGraph(graphData);
-  renderTable();
+  const limit = parseInt(document.getElementById("graphLimit").value) || 0;
+  const sortBy = document.getElementById("graphSortBy").value;
+  let sorted = [...graphData.nodes].sort((a, b) => b[sortBy] - a[sortBy]);
+  graphNodes = limit > 0 ? sorted.slice(0, limit) : sorted;
 }
 
-/* ════════════════════════════════════════════
+/* ═══════════════════════════════════════════
+   WEBWORKER — force layout
+═══════════════════════════════════════════ */
+const WORKER_SRC = `
+importScripts('https://d3js.org/d3.v7.min.js');
+
+function nodeRadius(n, maxIn) {
+  return Math.max(4, Math.min(22, 5 + (n.inlinks_count / Math.max(1, maxIn)) * 17));
+}
+
+self.onmessage = function(e) {
+  const { nodes, edges, width, height } = e.data;
+  const maxIn = Math.max(1, ...nodes.map(n => n.inlinks_count));
+  const simNodes = nodes.map(n => ({ ...n }));
+  const nodeById = {};
+  simNodes.forEach(n => nodeById[n.id] = n);
+  const simEdges = edges
+    .filter(e => nodeById[e.source] && nodeById[e.target])
+    .map(e => ({ source: e.source, target: e.target }));
+
+  const sim = d3.forceSimulation(simNodes)
+    .force("link", d3.forceLink(simEdges).id(d => d.id).distance(70).strength(0.3))
+    .force("charge", d3.forceManyBody().strength(-130))
+    .force("center", d3.forceCenter(width / 2, height / 2))
+    .force("collision", d3.forceCollide(d => nodeRadius(d, maxIn) + 3))
+    .stop();
+
+  const ticks = Math.ceil(Math.log(sim.alphaMin()) / Math.log(1 - sim.alphaDecay()));
+  for (let i = 0; i < ticks; i++) {
+    sim.tick();
+    if (i % 100 === 0) self.postMessage({ type: 'tick', i, total: ticks });
+  }
+  self.postMessage({
+    type: 'done',
+    positions: simNodes.map(n => ({ id: n.id, x: n.x, y: n.y }))
+  });
+};
+`;
+
+function runWorker(nodes, edges, width, height) {
+  return new Promise((resolve) => {
+    const blob = new Blob([WORKER_SRC], { type: "application/javascript" });
+    const url = URL.createObjectURL(blob);
+    const worker = new Worker(url);
+    worker.onmessage = (e) => {
+      if (e.data.type === "tick") {
+        const pct = Math.round((e.data.i / e.data.total) * 100);
+        document.getElementById("progressLabel").textContent = `Calcul du graphe… ${pct}%`;
+        document.getElementById("progressFill").style.width = pct + "%";
+      } else if (e.data.type === "done") {
+        worker.terminate();
+        URL.revokeObjectURL(url);
+        resolve(e.data.positions);
+      }
+    };
+    worker.postMessage({ nodes, edges, width, height });
+  });
+}
+
+/* ═══════════════════════════════════════════
+   GENERATE GRAPH
+═══════════════════════════════════════════ */
+async function generateGraph() {
+  if (!graphData) return;
+  buildGraphSubset();
+
+  const canvas = document.getElementById("graphCanvas");
+  const wrap = document.getElementById("graphWrap");
+  canvas.width = wrap.clientWidth;
+  canvas.height = wrap.clientHeight;
+
+  document.getElementById("progressWrap").style.display = "flex";
+  document.getElementById("progressLabel").textContent = "Calcul du graphe…";
+  document.getElementById("progressFill").style.width = "0%";
+  document.getElementById("genGraphBtn").style.display = "none";
+
+  const nodeSet = new Set(graphNodes.map(n => n.id));
+  const subEdges = graphData.edges.filter(e => nodeSet.has(e.source) && nodeSet.has(e.target));
+
+  const positions = await runWorker(graphNodes, subEdges, canvas.width, canvas.height);
+  nodePositions = {};
+  positions.forEach(p => { nodePositions[p.id] = { x: p.x, y: p.y }; });
+
+  hideProgress();
+  setupCanvasInteraction(canvas, subEdges);
+  showCanvas();
+  drawCanvas();
+}
+
+/* ═══════════════════════════════════════════
+   CANVAS RENDER
+═══════════════════════════════════════════ */
+function drawCanvas() {
+  const canvas = document.getElementById("graphCanvas");
+  if (!canvas || !graphReady) return;
+  const ctx = canvas.getContext("2d");
+  const t = canvasTransform;
+  const nodeSet = new Set(graphNodes.map(n => n.id));
+  const subEdges = graphData.edges.filter(e => nodeSet.has(e.source) && nodeSet.has(e.target));
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.save();
+  ctx.translate(t.x, t.y);
+  ctx.scale(t.k, t.k);
+
+  // Draw edges
+  ctx.lineWidth = 0.8 / t.k;
+  for (const edge of subEdges) {
+    const s = nodePositions[edge.source];
+    const tg = nodePositions[edge.target];
+    if (!s || !tg) continue;
+    const isHighlighted = selectedNodeId !== null && (edge.source === selectedNodeId || edge.target === selectedNodeId);
+    ctx.beginPath();
+    ctx.moveTo(s.x, s.y);
+    ctx.lineTo(tg.x, tg.y);
+    ctx.strokeStyle = isHighlighted ? "#56cfb2" : "#3a3f5c";
+    ctx.globalAlpha = isHighlighted ? 0.9 : 0.45;
+    ctx.stroke();
+    // Arrow tip
+    if (isHighlighted) {
+      const angle = Math.atan2(tg.y - s.y, tg.x - s.x);
+      const r = nodeRadius(graphNodes.find(n => n.id === edge.target) || {inlinks_count:0});
+      const ax = tg.x - Math.cos(angle) * (r + 6 / t.k);
+      const ay = tg.y - Math.sin(angle) * (r + 6 / t.k);
+      ctx.beginPath();
+      ctx.moveTo(ax, ay);
+      ctx.lineTo(ax - Math.cos(angle - 0.4) * 8 / t.k, ay - Math.sin(angle - 0.4) * 8 / t.k);
+      ctx.lineTo(ax - Math.cos(angle + 0.4) * 8 / t.k, ay - Math.sin(angle + 0.4) * 8 / t.k);
+      ctx.closePath();
+      ctx.fillStyle = "#56cfb2";
+      ctx.fill();
+    }
+  }
+  ctx.globalAlpha = 1;
+
+  // Draw nodes
+  for (const node of graphNodes) {
+    const pos = nodePositions[node.id];
+    if (!pos) continue;
+    const r = nodeRadius(node);
+    const isSelected = node.id === selectedNodeId;
+    const isHovered  = node.id === hoveredNode?.id;
+    ctx.beginPath();
+    ctx.arc(pos.x, pos.y, r, 0, Math.PI * 2);
+    ctx.fillStyle = statusColor(node.status_code);
+    ctx.globalAlpha = 0.85;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    if (isSelected || isHovered) {
+      ctx.strokeStyle = isSelected ? "#fff" : "#ccc";
+      ctx.lineWidth = (isSelected ? 2.5 : 1.5) / t.k;
+      ctx.stroke();
+    }
+  }
+
+  ctx.restore();
+}
+
+/* ═══════════════════════════════════════════
+   CANVAS INTERACTION
+═══════════════════════════════════════════ */
+function setupCanvasInteraction(canvas, subEdges) {
+  canvasTransform = d3.zoomIdentity;
+  const zoom = d3.zoom().scaleExtent([0.05, 8]).on("zoom", (e) => {
+    canvasTransform = e.transform;
+    drawCanvas();
+  });
+  d3.select(canvas).call(zoom);
+
+  const tooltip = document.getElementById("tooltip");
+
+  function hitTest(mx, my) {
+    for (const node of graphNodes) {
+      const pos = nodePositions[node.id];
+      if (!pos) continue;
+      const r = nodeRadius(node);
+      const wx = (mx - canvasTransform.x) / canvasTransform.k;
+      const wy = (my - canvasTransform.y) / canvasTransform.k;
+      if ((wx - pos.x) ** 2 + (wy - pos.y) ** 2 <= r * r) return node;
+    }
+    return null;
+  }
+
+  canvas.addEventListener("mousemove", (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const found = hitTest(e.clientX - rect.left, e.clientY - rect.top);
+    if (found !== hoveredNode) { hoveredNode = found; drawCanvas(); }
+    if (found) {
+      tooltip.classList.add("visible");
+      document.getElementById("tt-url").textContent     = found.url;
+      document.getElementById("tt-title").textContent   = found.title || "(sans titre)";
+      document.getElementById("tt-status").textContent  = found.status_code || "Erreur";
+      document.getElementById("tt-depth").textContent   = found.depth;
+      document.getElementById("tt-inlinks").textContent = found.inlinks_count;
+      document.getElementById("tt-outlinks").textContent= found.outlinks_count;
+      document.getElementById("tt-words").textContent   = found.word_count.toLocaleString();
+      document.getElementById("tt-h1").textContent      = found.h1.join(" / ") || "—";
+      tooltip.style.left = (e.clientX + 16) + "px";
+      tooltip.style.top  = (e.clientY - 10) + "px";
+    } else {
+      tooltip.classList.remove("visible");
+    }
+  });
+
+  canvas.addEventListener("mouseleave", () => { tooltip.classList.remove("visible"); hoveredNode = null; drawCanvas(); });
+
+  canvas.addEventListener("click", (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const found = hitTest(e.clientX - rect.left, e.clientY - rect.top);
+    if (found) {
+      selectedNodeId = found.id;
+      highlightTableRow(found.id);
+    } else {
+      selectedNodeId = null;
+      document.querySelectorAll("#tableBody tr").forEach(tr => tr.classList.remove("selected"));
+    }
+    drawCanvas();
+  });
+
+  // Resize
+  new ResizeObserver(() => {
+    canvas.width = canvas.parentElement.clientWidth;
+    canvas.height = canvas.parentElement.clientHeight;
+    drawCanvas();
+  }).observe(canvas.parentElement);
+}
+
+/* ═══════════════════════════════════════════
    EVENTS
-════════════════════════════════════════════ */
+═══════════════════════════════════════════ */
+document.getElementById("btnOptions").addEventListener("click", () => {
+  const panel = document.getElementById("optionsPanel");
+  const btn = document.getElementById("btnOptions");
+  const open = panel.classList.toggle("open");
+  btn.classList.toggle("open", open);
+});
+
 document.getElementById("btnStart").addEventListener("click", async () => {
   const url = document.getElementById("urlInput").value.trim();
   if (!url) return alert("Veuillez saisir une URL");
   const maxUrls = parseInt(document.getElementById("maxUrls").value) || 200;
   const delay   = parseFloat(document.getElementById("crawlDelay").value) || 0.5;
+  const config  = buildConfig();
+  savePrefs();
 
   setBtnState(true);
+  showCrawlLive();
   document.getElementById("progressWrap").style.display = "flex";
   document.getElementById("progressLabel").textContent = "Démarrage du crawl…";
   document.getElementById("progressFill").style.width = "0%";
@@ -702,41 +805,38 @@ document.getElementById("btnStart").addEventListener("click", async () => {
     const r = await fetch("/api/crawl", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url, max_urls: maxUrls, delay }),
+      body: JSON.stringify({ url, max_urls: maxUrls, delay, config }),
     });
     const j = await r.json();
-    if (!r.ok) { alert(j.error); setBtnState(false); hideProgress(); }
-  } catch(e) {
-    alert("Impossible de contacter le serveur : " + e);
-    setBtnState(false); hideProgress();
-  }
+    if (!r.ok) { alert(j.error); setBtnState(false); hideProgress(); showEmpty(); }
+  } catch(e) { alert("Impossible de contacter le serveur : " + e); setBtnState(false); hideProgress(); showEmpty(); }
 });
 
 document.getElementById("btnStop").addEventListener("click", async () => {
   await fetch("/api/crawl/stop", { method: "POST" });
 });
 
-document.getElementById("btnLoad").addEventListener("click", () => {
-  document.getElementById("fileInput").click();
-});
+document.getElementById("btnLoad").addEventListener("click", () => document.getElementById("fileInput").click());
 
 document.getElementById("fileInput").addEventListener("change", async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const fd = new FormData();
-  fd.append("file", file);
+  const file = e.target.files[0]; if (!file) return;
+  const fd = new FormData(); fd.append("file", file);
   const r = await fetch("/api/upload", { method: "POST", body: fd });
-  if (r.ok) { await fetchData(); }
+  if (r.ok) await fetchData();
   else { const j = await r.json(); alert(j.error); }
   e.target.value = "";
 });
+
+document.getElementById("genGraphBtn").addEventListener("click", generateGraph);
+
+document.getElementById("graphLimit").addEventListener("change", () => { if (graphReady) generateGraph(); });
+document.getElementById("graphSortBy").addEventListener("change", () => { if (graphReady) generateGraph(); });
 
 // Table sort
 document.querySelectorAll("thead th[data-col]").forEach(th => {
   th.addEventListener("click", () => {
     const col = th.dataset.col;
-    if (sortCol === col) sortDir *= -1;
-    else { sortCol = col; sortDir = -1; }
+    if (sortCol === col) sortDir *= -1; else { sortCol = col; sortDir = -1; }
     renderTable();
   });
 });
@@ -747,9 +847,10 @@ document.querySelectorAll("thead th[data-col]").forEach(th => {
   document.getElementById(id).addEventListener("change", renderTable);
 });
 
-/* ════════════════════════════════════════════
+/* ═══════════════════════════════════════════
    INIT
-════════════════════════════════════════════ */
+═══════════════════════════════════════════ */
+loadPrefs();
 connectWS();
 fetchData();
 </script>
