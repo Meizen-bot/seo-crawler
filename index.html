@@ -571,8 +571,8 @@ self.onmessage = function(e) {
     .map(e => ({ source: e.source, target: e.target }));
 
   const sim = d3.forceSimulation(simNodes)
-    .force("link", d3.forceLink(simEdges).id(d => d.id).distance(70).strength(0.3))
-    .force("charge", d3.forceManyBody().strength(-130))
+    .force("link", d3.forceLink(simEdges).id(d => d.id).distance(160).strength(0.25))
+    .force("charge", d3.forceManyBody().strength(-350))
     .force("center", d3.forceCenter(width / 2, height / 2))
     .force("collision", d3.forceCollide(d => nodeRadius(d, maxIn) + 3))
     .stop();
@@ -648,7 +648,20 @@ function drawCanvas() {
   const ctx = canvas.getContext("2d");
   const t = canvasTransform;
   const nodeSet = new Set(graphNodes.map(n => n.id));
-  const subEdges = graphData.edges.filter(e => nodeSet.has(e.source) && nodeSet.has(e.target));
+  const allSubEdges = graphData.edges.filter(e => nodeSet.has(e.source) && nodeSet.has(e.target));
+
+  // When a node is selected, restrict view to it + direct neighbors
+  let visibleNodeSet = nodeSet;
+  let subEdges = allSubEdges;
+  if (selectedNodeId !== null) {
+    const neighbors = new Set([selectedNodeId]);
+    for (const e of allSubEdges) {
+      if (e.source === selectedNodeId) neighbors.add(e.target);
+      if (e.target === selectedNodeId) neighbors.add(e.source);
+    }
+    visibleNodeSet = neighbors;
+    subEdges = allSubEdges.filter(e => neighbors.has(e.source) && neighbors.has(e.target));
+  }
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.save();
@@ -687,6 +700,7 @@ function drawCanvas() {
 
   // Draw nodes
   for (const node of graphNodes) {
+    if (!visibleNodeSet.has(node.id)) continue;
     const pos = nodePositions[node.id];
     if (!pos) continue;
     const r = nodeRadius(node);
