@@ -73,11 +73,15 @@ NAV_IDS = {
     "wpadminbar", "main-header", "main-footer", "comments",
 }
 CONTENT_SELECTORS = [
-    # Semantic HTML5 — highest priority
-    "article",
-    "main",
-    "[role='main']",
-    # WordPress core & Gutenberg
+    # WordPress post article — spécifique en PREMIER (hentry = classe microformat WP sur la vraie balise post)
+    "article.hentry",
+    "article.type-post",
+    "article.type-page",
+    # Elementor post content widget (avant article générique)
+    ".elementor-widget-theme-post-content",
+    # Divi post content
+    ".et_pb_post_content",
+    # WordPress core & Gutenberg content zones
     ".entry-content",
     ".post-content",
     ".page-content",
@@ -95,14 +99,15 @@ CONTENT_SELECTORS = [
     ".page-body",
     ".main-content",
     ".main-body",
-    "#content",
     "#main-content",
     "#post-content",
     "#article-content",
-    # Elementor
-    ".elementor-widget-theme-post-content",
-    # Divi
-    ".et_pb_post_content",
+    # HTML5 sémantique — APRÈS les sélecteurs spécifiques (article générique peut matcher des carousels)
+    "main",
+    "[role='main']",
+    "article",
+    # IDs génériques
+    "#content",
     # Webflow
     ".rich-text",
     ".w-richtext",
