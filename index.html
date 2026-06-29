@@ -93,12 +93,31 @@
     #graphControls label { font-size:12px; color:var(--text-muted); }
 
     /* TOOLTIP */
-    #tooltip { position:fixed; background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:10px 14px; pointer-events:none; opacity:0; transition:opacity .1s; max-width:300px; z-index:200; box-shadow:0 8px 32px #0008; }
+    #tooltip { position:fixed; background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:10px 14px; pointer-events:auto; opacity:0; transition:opacity .15s; max-width:320px; z-index:200; box-shadow:0 8px 32px #0008; }
     #tooltip.visible { opacity:1; }
     .tt-url { font-size:11px; color:var(--accent); word-break:break-all; margin-bottom:5px; }
+    .tt-url a { color:var(--accent); text-decoration:none; }
+    .tt-url a:hover { text-decoration:underline; }
     .tt-title { font-weight:600; margin-bottom:7px; font-size:13px; }
     .tt-grid { display:grid; grid-template-columns:auto 1fr; gap:2px 10px; font-size:12px; }
     .tt-lbl{color:var(--text-muted);} .tt-val{color:var(--text);font-weight:500;}
+
+    /* NODE DETAIL PANEL */
+    #nodeDetail { display:none; flex-direction:column; border-top:2px solid var(--accent); background:var(--surface); overflow:hidden; flex-shrink:0; max-height:55%; }
+    #ndHeader { padding:8px 12px 6px; display:flex; flex-direction:column; gap:2px; background:var(--surface2); border-bottom:1px solid var(--border); }
+    #ndClose { align-self:flex-end; background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:12px; padding:0; margin-bottom:2px; }
+    #ndClose:hover { color:var(--text); }
+    .nd-url-link { font-size:11px; color:var(--accent); word-break:break-all; text-decoration:none; }
+    .nd-url-link:hover { text-decoration:underline; }
+    .nd-page-title { font-weight:600; font-size:13px; margin-top:2px; }
+    .nd-badges { display:flex; gap:8px; align-items:center; margin-top:4px; font-size:11px; color:var(--text-muted); flex-wrap:wrap; }
+    #ndBody { overflow-y:auto; flex:1; }
+    .nd-section-hd { padding:5px 12px; font-size:10px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.06em; background:var(--surface2); position:sticky; top:0; z-index:1; }
+    .nd-item { padding:5px 12px; border-bottom:1px solid #ffffff08; cursor:pointer; display:flex; flex-direction:column; gap:1px; }
+    .nd-item:hover { background:var(--surface2); }
+    .nd-item-url { font-size:11px; color:var(--accent); word-break:break-all; }
+    .nd-item-meta { font-size:11px; color:var(--text-muted); display:flex; gap:6px; align-items:center; }
+    .nd-empty { padding:8px 12px; font-size:12px; color:var(--text-muted); font-style:italic; }
 
     /* SIDE PANEL (graph tab) */
     #panel { width:420px; background:var(--surface); border-left:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; flex-shrink:0; }
@@ -333,6 +352,21 @@
           <th data-col="outlinks_count">Out <span>↕</span></th>
         </tr></thead><tbody id="tableBody"></tbody></table>
       </div>
+      <!-- Node detail sub-panel -->
+      <div id="nodeDetail">
+        <div id="ndHeader">
+          <button id="ndClose">✕ Fermer</button>
+          <a class="nd-url-link" id="nd-url" href="#" target="_blank" rel="noopener"></a>
+          <div class="nd-page-title" id="nd-title"></div>
+          <div class="nd-badges" id="nd-badges"></div>
+        </div>
+        <div id="ndBody">
+          <div class="nd-section-hd">📥 Inlinks (<span id="nd-incount">0</span>)</div>
+          <div id="nd-inlist"></div>
+          <div class="nd-section-hd">📤 Outlinks (<span id="nd-outcount">0</span>)</div>
+          <div id="nd-outlist"></div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -448,7 +482,7 @@
 
 <!-- TOOLTIP -->
 <div id="tooltip">
-  <div class="tt-url" id="tt-url"></div>
+  <div class="tt-url"><a id="tt-url-link" href="#" target="_blank" rel="noopener"></a></div>
   <div class="tt-title" id="tt-title"></div>
   <div class="tt-grid">
     <span class="tt-lbl">Status</span>     <span class="tt-val" id="tt-status"></span>
@@ -486,6 +520,64 @@ let coconSortCol = "content_inlinks", coconSortDir = -1;
 let coconChip = null; // "orphan" | "hub" | "auth" | null
 
 /* ═══════════════════════════ HELPERS ═══════════════════════════ */
+
+/* ─── Sticky tooltip ─── */
+let _tipTimer = null;
+const _tooltip = document.getElementById("tooltip");
+function showTip(node, cx, cy, opts={}) {
+  clearTimeout(_tipTimer);
+  const urlEl = document.getElementById("tt-url-link");
+  urlEl.href = node.url; urlEl.textContent = node.url;
+  document.getElementById("tt-title").textContent = node.title||"(sans titre)";
+  document.getElementById("tt-status").textContent = node.status_code||"Erreur";
+  document.getElementById("tt-depth").textContent  = node.depth??"-";
+  document.getElementById("tt-inlinks").textContent  = opts.inlinks  ?? (node.inlinks_count??0);
+  document.getElementById("tt-outlinks").textContent = opts.outlinks ?? (node.outlinks_count??0);
+  document.getElementById("tt-words").textContent = (node.word_count||0).toLocaleString();
+  document.getElementById("tt-h1").textContent = (node.h1||[]).join(" / ")||"—";
+  _tooltip.style.left=(cx+16)+"px"; _tooltip.style.top=(cy-10)+"px";
+  _tooltip.classList.add("visible");
+}
+function schedulHideTip(){ _tipTimer=setTimeout(()=>_tooltip.classList.remove("visible"),200); }
+_tooltip.addEventListener("mouseenter",()=>clearTimeout(_tipTimer));
+_tooltip.addEventListener("mouseleave",()=>_tooltip.classList.remove("visible"));
+
+/* ─── Node detail panel ─── */
+function showNodeDetail(id) {
+  if(!graphData) return;
+  const node = graphData.nodes.find(n=>n.id===id);
+  if(!node) return;
+  const inlinkIds  = graphData.edges.filter(e=>e.target===id).map(e=>e.source);
+  const outlinkIds = graphData.edges.filter(e=>e.source===id).map(e=>e.target);
+  const byId = tid => graphData.nodes.find(n=>n.id===tid);
+  document.getElementById("nd-url").href=node.url;
+  document.getElementById("nd-url").textContent=node.url;
+  document.getElementById("nd-title").textContent=node.title||"(sans titre)";
+  document.getElementById("nd-badges").innerHTML=`${statusBadge(node.status_code)}<span>Depth ${node.depth}</span><span>${(node.word_count||0).toLocaleString()} mots</span><span>${node.inlinks_count} in / ${node.outlinks_count} out</span>`;
+  function renderList(containerId, ids) {
+    const el=document.getElementById(containerId);
+    if(!ids.length){el.innerHTML=`<div class="nd-empty">Aucun</div>`;return;}
+    el.innerHTML=ids.map(tid=>{
+      const n=byId(tid); if(!n) return "";
+      return `<div class="nd-item" data-id="${n.id}"><div class="nd-item-url">${shortUrl(n.url)}</div><div class="nd-item-meta"><span>${statusBadge(n.status_code)}</span><span>Depth ${n.depth}</span><span style="color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px">${n.title||"—"}</span></div></div>`;
+    }).join("");
+    el.querySelectorAll(".nd-item").forEach(item=>{
+      item.addEventListener("click",()=>{
+        const tid=parseInt(item.dataset.id);
+        selectedNodeId=tid; highlightTableRow(tid); showNodeDetail(tid);
+        if(graphReady) drawCanvas();
+      });
+    });
+  }
+  document.getElementById("nd-incount").textContent=inlinkIds.length;
+  document.getElementById("nd-outcount").textContent=outlinkIds.length;
+  renderList("nd-inlist",inlinkIds); renderList("nd-outlist",outlinkIds);
+  document.getElementById("nodeDetail").style.display="flex";
+}
+document.getElementById("ndClose").addEventListener("click",()=>{
+  document.getElementById("nodeDetail").style.display="none";
+});
+
 const statusColor = c => c===200?"#22c55e":c>=300&&c<400?"#f59e0b":c>=400?"#ef4444":"#6b7280";
 const statusBadge = c => {
   if(c===200) return `<span class="badge b-ok">200</span>`;
@@ -687,7 +779,7 @@ function renderTable() {
   const tbody=document.getElementById("tableBody");
   tbody.innerHTML=rows.map(n=>`<tr data-id="${n.id}" class="${n.id===selectedNodeId?"selected":""}"><td title="${n.url}">${shortUrl(n.url)}</td><td title="${n.title}">${n.title||"—"}</td><td>${statusBadge(n.status_code)}</td><td>${n.depth}</td><td>${n.inlinks_count}</td><td>${n.outlinks_count}</td></tr>`).join("");
   tbody.querySelectorAll("tr").forEach(tr=>{
-    tr.addEventListener("click",()=>{ const id=parseInt(tr.dataset.id); selectedNodeId=id; highlightTableRow(id); if(graphReady) drawCanvas(); });
+    tr.addEventListener("click",()=>{ const id=parseInt(tr.dataset.id); selectedNodeId=id; highlightTableRow(id); showNodeDetail(id); if(graphReady) drawCanvas(); });
   });
 }
 function highlightTableRow(id){ document.querySelectorAll("#tableBody tr").forEach(tr=>tr.classList.toggle("selected",parseInt(tr.dataset.id)===id)); document.querySelector(`#tableBody tr[data-id="${id}"]`)?.scrollIntoView({block:"nearest"}); }
@@ -802,9 +894,9 @@ function setupCanvasInteraction(canvas,subEdges){
   d3.select(canvas).call(zoom);
   const tooltip=document.getElementById("tooltip");
   function hitTest(mx,my){for(const node of graphNodes){const pos=nodePositions[node.id];if(!pos)continue;const r=nodeRadius(node,graphNodes);const wx=(mx-canvasTransform.x)/canvasTransform.k,wy=(my-canvasTransform.y)/canvasTransform.k;if((wx-pos.x)**2+(wy-pos.y)**2<=r*r)return node;}return null;}
-  canvas.addEventListener("mousemove",e=>{const rect=canvas.getBoundingClientRect();const found=hitTest(e.clientX-rect.left,e.clientY-rect.top);if(found!==hoveredNode){hoveredNode=found;drawCanvas();}if(found){tooltip.classList.add("visible");document.getElementById("tt-url").textContent=found.url;document.getElementById("tt-title").textContent=found.title||"(sans titre)";document.getElementById("tt-status").textContent=found.status_code||"Erreur";document.getElementById("tt-depth").textContent=found.depth;document.getElementById("tt-inlinks").textContent=found.inlinks_count;document.getElementById("tt-outlinks").textContent=found.outlinks_count;document.getElementById("tt-words").textContent=found.word_count.toLocaleString();document.getElementById("tt-h1").textContent=found.h1.join(" / ")||"—";tooltip.style.left=(e.clientX+16)+"px";tooltip.style.top=(e.clientY-10)+"px";}else tooltip.classList.remove("visible");});
-  canvas.addEventListener("mouseleave",()=>{tooltip.classList.remove("visible");hoveredNode=null;drawCanvas();});
-  canvas.addEventListener("click",e=>{const rect=canvas.getBoundingClientRect();const found=hitTest(e.clientX-rect.left,e.clientY-rect.top);if(found){selectedNodeId=found.id;highlightTableRow(found.id);}else{selectedNodeId=null;document.querySelectorAll("#tableBody tr").forEach(tr=>tr.classList.remove("selected"));}drawCanvas();});
+  canvas.addEventListener("mousemove",e=>{const rect=canvas.getBoundingClientRect();const found=hitTest(e.clientX-rect.left,e.clientY-rect.top);if(found!==hoveredNode){hoveredNode=found;drawCanvas();}if(found){showTip(found,e.clientX,e.clientY);}else schedulHideTip();});
+  canvas.addEventListener("mouseleave",()=>{schedulHideTip();hoveredNode=null;drawCanvas();});
+  canvas.addEventListener("click",e=>{const rect=canvas.getBoundingClientRect();const found=hitTest(e.clientX-rect.left,e.clientY-rect.top);if(found){selectedNodeId=found.id;highlightTableRow(found.id);showNodeDetail(found.id);}else{selectedNodeId=null;document.querySelectorAll("#tableBody tr").forEach(tr=>tr.classList.remove("selected"));}drawCanvas();});
   new ResizeObserver(()=>{canvas.width=canvas.parentElement.clientWidth;canvas.height=canvas.parentElement.clientHeight;drawCanvas();}).observe(canvas.parentElement);
 }
 
@@ -1039,20 +1131,14 @@ function drawCoconGraph(centerNode, contentInlinks, contentOutlinks) {
     for(const n of simNodes){const r=cnr(n);if((wx-n.x)**2+(wy-n.y)**2<=r*r){found=n;break;}}
     coconHoveredId=found?.id??null;
     if(found){
-      tooltip.classList.add("visible");
-      document.getElementById("tt-url").textContent=found.url;
-      document.getElementById("tt-title").textContent=found.title||"(sans titre)";
-      document.getElementById("tt-status").textContent=found.status_code||"—";
-      document.getElementById("tt-depth").textContent=found.depth??"—";
-      document.getElementById("tt-inlinks").textContent=found.content_link_ids?`${(coconIndex.contentInlinks[found.id]||[]).length} édito`:(found.inlinks_count??0);
-      document.getElementById("tt-outlinks").textContent=found.content_link_ids?`${found.content_link_count||0} édito`:(found.outlinks_count??0);
-      document.getElementById("tt-words").textContent=(found.word_count||0).toLocaleString();
-      document.getElementById("tt-h1").textContent=(found.h1||[]).join(" / ")||"—";
-      tooltip.style.left=(e.clientX+16)+"px";tooltip.style.top=(e.clientY-10)+"px";
-    }else tooltip.classList.remove("visible");
+      showTip(found,e.clientX,e.clientY,{
+        inlinks: found.content_link_ids?`${(coconIndex.contentInlinks[found.id]||[]).length} édito`:(found.inlinks_count??0),
+        outlinks: found.content_link_ids?`${found.content_link_count||0} édito`:(found.outlinks_count??0),
+      });
+    }else schedulHideTip();
     renderCoconCanvas();
   });
-  canvas.addEventListener("mouseleave",()=>{tooltip.classList.remove("visible");coconHoveredId=null;renderCoconCanvas();});
+  canvas.addEventListener("mouseleave",()=>{schedulHideTip();coconHoveredId=null;renderCoconCanvas();});
   canvas.addEventListener("click",e=>{
     const rect=canvas.getBoundingClientRect();
     const wx=(e.clientX-rect.left-coconTransform.x)/coconTransform.k;
@@ -1422,25 +1508,16 @@ function renderMultiGraph() {
     const found = hitTest(e.clientX - rect.left, e.clientY - rect.top);
     multiHoveredId = found?.id ?? null;
     if (found) {
-      tooltip.classList.add("visible");
-      document.getElementById("tt-url").textContent      = found.url;
-      document.getElementById("tt-title").textContent    = found.title || "(sans titre)";
-      document.getElementById("tt-status").textContent   = found.status_code || "—";
-      document.getElementById("tt-depth").textContent    = found.depth ?? "—";
-      document.getElementById("tt-inlinks").textContent  = `${withinIn[found.id] || 0} (dans sélection)`;
-      document.getElementById("tt-outlinks").textContent = `${(found.content_link_ids||[]).filter(id=>selSet.has(id)).length} (dans sélection)`;
-      document.getElementById("tt-words").textContent    = (found.word_count || 0).toLocaleString();
-      document.getElementById("tt-h1").textContent       = (found.h1 || []).join(" / ") || "—";
-      tooltip.style.left = (e.clientX + 16) + "px";
-      tooltip.style.top  = (e.clientY - 10) + "px";
-    } else {
-      tooltip.classList.remove("visible");
-    }
+      showTip(found, e.clientX, e.clientY, {
+        inlinks:  `${withinIn[found.id]||0} (dans sélection)`,
+        outlinks: `${(found.content_link_ids||[]).filter(id=>selSet.has(id)).length} (dans sélection)`,
+      });
+    } else schedulHideTip();
     draw();
   });
 
   canvas.addEventListener("mouseleave", () => {
-    tooltip.classList.remove("visible");
+    schedulHideTip();
     multiHoveredId = null;
     draw();
   });
