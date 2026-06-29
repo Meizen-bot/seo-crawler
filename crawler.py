@@ -21,20 +21,103 @@ DEFAULT_SKIP_EXTS = {
 NAV_SELECTORS_CSS = [
     "header", "footer", "nav", "aside",
     "[role='navigation']", "[role='banner']", "[role='contentinfo']",
+    # Generic class patterns
     ".nav", ".menu", ".navigation", ".header", ".footer",
     ".sidebar", ".widget", ".breadcrumb", ".breadcrumbs",
+    # ID patterns
     "#menu", "#nav", "#header", "#footer", "#sidebar",
+    # WordPress / WooCommerce
+    "#wpadminbar", ".wp-block-navigation", ".wp-block-template-part",
+    ".site-header", ".site-footer", ".site-navigation",
+    ".wp-site-blocks > header", ".wp-site-blocks > footer",
+    # Elementor
+    ".elementor-location-header", ".elementor-location-footer",
+    # Divi
+    "#main-header", "#main-footer", ".et-menu-nav",
+    # WPBakery / Avada / Genesis
+    ".fusion-header-wrapper", ".fusion-footer-widget-area", ".fusion-footer",
+    ".genesis-nav-menu", ".genesis-skip-link",
+    # Related posts / author boxes / social share (not editorial links)
+    ".related-posts", ".related", ".post-related",
+    ".author-bio", ".author-box", ".post-author",
+    ".social-share", ".share-buttons", ".sharedaddy",
+    ".tags-links", ".cat-links", ".post-tags", ".post-categories",
+    # Comments
+    "#comments", ".comments-area", ".comment-list",
+    # Cookie / GDPR banners
+    ".cookie-banner", ".cookie-notice", "#cookie-law-info-bar",
+    # Popups / overlays
+    ".popup", ".modal", ".overlay",
+    # Pagination
+    ".pagination", ".wp-pagenavi", ".nav-links",
+    # Search forms
+    ".search-form", ".search-widget",
 ]
 NAV_CLASSES = {
     "nav", "menu", "navigation", "header", "footer",
     "sidebar", "widget", "breadcrumb", "breadcrumbs",
     "top-bar", "topbar", "menubar",
+    # WordPress
+    "site-header", "site-footer", "site-navigation",
+    "wp-block-navigation",
+    # Elementor
+    "elementor-location-header", "elementor-location-footer",
+    # Related / meta blocks
+    "related-posts", "related", "author-bio", "author-box",
+    "social-share", "share-buttons", "post-tags", "post-categories",
+    "tags-links", "cat-links", "pagination", "nav-links",
+    "comments-area", "comment-list",
 }
-NAV_IDS = {"menu", "nav", "header", "footer", "sidebar"}
+NAV_IDS = {
+    "menu", "nav", "header", "footer", "sidebar",
+    "wpadminbar", "main-header", "main-footer", "comments",
+}
 CONTENT_SELECTORS = [
-    "article", "main", "[role='main']",
-    ".content", ".post", ".entry-content",
-    ".page-content", "#content", ".main-content",
+    # Semantic HTML5 — highest priority
+    "article",
+    "main",
+    "[role='main']",
+    # WordPress core & Gutenberg
+    ".entry-content",
+    ".post-content",
+    ".page-content",
+    ".wp-block-post-content",
+    ".single-content",
+    # Generic CMS patterns
+    ".content",
+    ".content-area",
+    ".content-wrapper",
+    ".article-content",
+    ".article-body",
+    ".post-body",
+    ".post-entry",
+    ".blog-content",
+    ".page-body",
+    ".main-content",
+    ".main-body",
+    "#content",
+    "#main-content",
+    "#post-content",
+    "#article-content",
+    # Elementor
+    ".elementor-widget-theme-post-content",
+    # Divi
+    ".et_pb_post_content",
+    # Webflow
+    ".rich-text",
+    ".w-richtext",
+    # HubSpot
+    ".blog-post__body",
+    ".hb-blog-post",
+    # Squarespace
+    ".sqs-block-html",
+    # Wix
+    "[data-mesh-id$='inlineContent']",
+    # Fallback: generic "post" wrapper
+    ".post",
+    ".hentry",
+    ".type-post",
+    ".type-page",
 ]
 
 
