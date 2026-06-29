@@ -142,6 +142,7 @@
       <div class="toggle-row"><input type="checkbox" id="optRobots" checked /><label for="optRobots">Respecter robots.txt</label></div>
       <div class="toggle-row"><input type="checkbox" id="optFilterExt" checked /><label for="optFilterExt">Exclure extensions médias / assets</label></div>
       <div class="toggle-row"><input type="checkbox" id="optStripParams" /><label for="optStripParams">Ignorer les paramètres URL (?param=…)</label></div>
+      <div class="toggle-row"><input type="checkbox" id="optExcludeNavFooter" /><label for="optExcludeNavFooter">Liens contextuels uniquement (exclure menu &amp; footer)</label></div>
     </div>
     <div class="opt-section">
       <h3>Sitemap</h3>
@@ -316,6 +317,7 @@ function savePrefs() {
     robots: document.getElementById("optRobots").checked,
     filterExt: document.getElementById("optFilterExt").checked,
     stripParams: document.getElementById("optStripParams").checked,
+    excludeNavFooter: document.getElementById("optExcludeNavFooter").checked,
     sitemapMode: document.querySelector('input[name="sitemapMode"]:checked')?.value || "discover",
     prefixes: document.getElementById("optPrefixes").value,
     keywords: document.getElementById("optKeywords").value,
@@ -332,6 +334,7 @@ function loadPrefs() {
     if (p.robots !== undefined) document.getElementById("optRobots").checked = p.robots;
     if (p.filterExt !== undefined) document.getElementById("optFilterExt").checked = p.filterExt;
     if (p.stripParams !== undefined) document.getElementById("optStripParams").checked = p.stripParams;
+    if (p.excludeNavFooter !== undefined) document.getElementById("optExcludeNavFooter").checked = p.excludeNavFooter;
     if (p.sitemapMode) { const r = document.querySelector(`input[name="sitemapMode"][value="${p.sitemapMode}"]`); if (r) r.checked = true; }
     if (p.prefixes) document.getElementById("optPrefixes").value = p.prefixes;
     if (p.keywords) document.getElementById("optKeywords").value = p.keywords;
@@ -343,6 +346,7 @@ function buildConfig() {
     respect_robots: document.getElementById("optRobots").checked,
     filter_extensions: document.getElementById("optFilterExt").checked,
     strip_params: document.getElementById("optStripParams").checked,
+    exclude_nav_footer: document.getElementById("optExcludeNavFooter").checked,
     sitemap_mode: document.querySelector('input[name="sitemapMode"]:checked')?.value || "discover",
     exclude_prefixes: document.getElementById("optPrefixes").value.split("\n").filter(Boolean),
     exclude_keywords: document.getElementById("optKeywords").value.split("\n").filter(Boolean),

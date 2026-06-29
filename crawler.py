@@ -199,8 +199,24 @@ class SEOCrawler:
             if body:
                 page.word_count = len(body.get_text(separator=" ").split())
 
+            link_soup = soup
+            if self.config.get("exclude_nav_footer", False):
+                import copy
+                link_soup = copy.copy(soup)
+                NAV_SELECTORS = [
+                    "nav", "header", "footer",
+                    "[role='navigation']", "[role='banner']", "[role='contentinfo']",
+                ]
+                for sel in NAV_SELECTORS:
+                    for tag in link_soup.select(sel):
+                        tag.decompose()
+                # Also remove common class-based menus
+                for cls in ("menu", "nav", "navigation", "header", "footer", "sidebar", "breadcrumb"):
+                    for tag in link_soup.find_all(class_=lambda c: c and cls in c.lower().split()):
+                        tag.decompose()
+
             links = set()
-            for a in soup.find_all("a", href=True):
+            for a in link_soup.find_all("a", href=True):
                 href = a["href"].strip()
                 if not href or href.startswith(("#", "mailto:", "tel:", "javascript:")):
                     continue
