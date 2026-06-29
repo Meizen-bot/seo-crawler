@@ -119,7 +119,8 @@
     .b-err{background:#ef444422;color:var(--err);} .b-unk{background:#8892b022;color:var(--text-muted);}
 
     /* ══ COCON TAB ══ */
-    #tab-cocon { flex-direction:row; }
+    #tab-cocon { flex-direction:column; }
+    #coconBody { display:flex; flex:1; flex-direction:row; overflow:hidden; }
 
     /* Cocon left panel */
     #coconLeft { flex:1; display:flex; flex-direction:column; overflow:hidden; }
@@ -345,6 +346,8 @@
     <button class="sub-tab-btn" data-subtab="multi">🗺️ Analyse multi-pages</button>
   </div>
 
+  <!-- Main row -->
+  <div id="coconBody">
   <!-- Left: dashboard + detail + multi -->
   <div id="coconLeft">
 
@@ -440,7 +443,8 @@
       <div class="cocon-link-list" id="coconOutlinkList"></div>
     </div>
   </div>
-</div>
+  </div><!-- end #coconBody -->
+</div><!-- end #tab-cocon -->
 
 <!-- TOOLTIP -->
 <div id="tooltip">
