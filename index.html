@@ -196,7 +196,7 @@
     /* Autocomplete */
     #coconAutocomplete { position:fixed; background:var(--surface); border:1px solid var(--border); border-radius:6px; z-index:300; max-height:200px; overflow-y:auto; box-shadow:0 8px 24px #0008; display:none; }
     .ac-item { padding:7px 12px; cursor:pointer; font-size:12px; }
-    .ac-item:hover { background:var(--surface2); }
+    .ac-item:hover, .ac-item.ac-active { background:var(--surface2); }
     .ac-url { color:var(--accent); font-size:11px; }
     .ac-title { color:var(--text); }
 
@@ -239,7 +239,7 @@
     /* Autocomplete shared */
     #coconAutocomplete, #multiAutocomplete { position:fixed; background:var(--surface); border:1px solid var(--border); border-radius:6px; z-index:300; max-height:200px; overflow-y:auto; box-shadow:0 8px 24px #0008; display:none; }
     .ac-item { padding:7px 12px; cursor:pointer; font-size:12px; }
-    .ac-item:hover { background:var(--surface2); }
+    .ac-item:hover, .ac-item.ac-active { background:var(--surface2); }
     .ac-url { color:var(--accent); font-size:11px; }
     .ac-title { color:var(--text); }
 
@@ -434,7 +434,11 @@
       <div id="multiLeft">
         <div id="multiLeftHeader">
           <h3>Pages sélectionnées (<span id="multiCount">0</span>)</h3>
-          <input id="multiSearch" type="text" placeholder="Ajouter une page…" autocomplete="off" />
+          <div style="display:flex;gap:5px;align-items:center">
+            <input id="multiSearch" type="text" placeholder="Rechercher une page…" autocomplete="off" style="flex:1" />
+            <button id="btnMultiAdd" title="Ajouter (Entrée)" style="background:var(--accent);color:#fff;border:none;border-radius:6px;padding:5px 8px;cursor:pointer;font-size:14px;flex-shrink:0">+</button>
+          </div>
+          <div id="multiAddFeedback" style="font-size:11px;color:var(--text-muted);margin-top:4px;min-height:14px"></div>
         </div>
         <div id="multiSelList"></div>
         <div id="multiLeftFooter">
@@ -1545,41 +1549,92 @@ function renderMultiGraph() {
 function setupMultiAutocomplete() {
   const input    = document.getElementById("multiSearch");
   const dropdown = document.getElementById("multiAutocomplete");
+  const feedback = document.getElementById("multiAddFeedback");
+  let acMatches = [];
+  let acIdx = -1;
 
-  input.addEventListener("input", () => {
-    const q = input.value.toLowerCase().trim();
+  function setFeedback(msg, ok) {
+    feedback.textContent = msg;
+    feedback.style.color = ok ? "#22c55e" : "var(--text-muted)";
+  }
+
+  function buildDropdown(q) {
     dropdown.innerHTML = "";
-    if (!q || !graphData) { dropdown.style.display = "none"; return; }
-
+    acIdx = -1;
+    if (!q || !graphData) { dropdown.style.display = "none"; acMatches = []; return; }
     const already = new Set(coconSelection);
-    const matches = graphData.nodes
+    acMatches = graphData.nodes
       .filter(n => !already.has(n.id) &&
-        (n.url.toLowerCase().includes(q) || n.title.toLowerCase().includes(q)))
-      .slice(0, 12);
-
-    if (!matches.length) { dropdown.style.display = "none"; return; }
-
-    matches.forEach(n => {
+        (n.url.toLowerCase().includes(q) || (n.title||"").toLowerCase().includes(q)))
+      .slice(0, 14);
+    if (!acMatches.length) {
+      dropdown.style.display = "none";
+      setFeedback("Aucune page trouvée", false);
+      return;
+    }
+    setFeedback("", false);
+    acMatches.forEach((n, i) => {
       const div = document.createElement("div");
       div.className = "ac-item";
-      div.innerHTML = `<div class="ac-title">${n.title || "(sans titre)"}</div><div class="ac-url">${shortUrl(n.url)}</div>`;
-      div.addEventListener("click", () => {
+      div.dataset.idx = i;
+      div.innerHTML = `<div class="ac-title">${n.title||"(sans titre)"}</div><div class="ac-url">${shortUrl(n.url)}</div>`;
+      div.addEventListener("mousedown", e => {
+        e.preventDefault();
         addToSelection(n.id);
-        input.value = "";
-        dropdown.style.display = "none";
+        input.value = ""; dropdown.style.display = "none"; acMatches = [];
+        setFeedback(`✓ ${shortUrl(n.url)} ajoutée`, true);
+        setTimeout(()=>setFeedback("",false), 2000);
       });
       dropdown.appendChild(div);
     });
-
     const rect = input.getBoundingClientRect();
     dropdown.style.left  = rect.left + "px";
     dropdown.style.top   = (rect.bottom + 4) + "px";
-    dropdown.style.width = rect.width + "px";
+    dropdown.style.width = (rect.width + 40) + "px"; // +40 for the + button
     dropdown.style.display = "block";
+  }
+
+  function highlightAc(i) {
+    dropdown.querySelectorAll(".ac-item").forEach((el,j)=>el.classList.toggle("ac-active",j===i));
+    if (i >= 0) dropdown.querySelectorAll(".ac-item")[i]?.scrollIntoView({block:"nearest"});
+  }
+
+  function addFirst() {
+    if (!graphData) { setFeedback("Aucune donnée chargée", false); return; }
+    const q = input.value.toLowerCase().trim();
+    if (!q) return;
+    const target = acIdx >= 0 && acMatches[acIdx] ? acMatches[acIdx] : acMatches[0];
+    if (!target) { setFeedback("Aucune page trouvée", false); return; }
+    if (coconSelection.includes(target.id)) { setFeedback("Déjà dans la sélection", false); return; }
+    addToSelection(target.id);
+    input.value = ""; dropdown.style.display = "none"; acMatches = []; acIdx = -1;
+    setFeedback(`✓ ${shortUrl(target.url)} ajoutée`, true);
+    setTimeout(()=>setFeedback("",false), 2000);
+  }
+
+  input.addEventListener("input", () => buildDropdown(input.value.toLowerCase().trim()));
+  input.addEventListener("focus", () => { if(input.value.trim()) buildDropdown(input.value.toLowerCase().trim()); });
+
+  input.addEventListener("keydown", e => {
+    if (e.key === "Enter")     { e.preventDefault(); addFirst(); }
+    else if (e.key === "Escape") { dropdown.style.display="none"; acIdx=-1; }
+    else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      acIdx = Math.min(acIdx+1, acMatches.length-1);
+      highlightAc(acIdx);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      acIdx = Math.max(acIdx-1, -1);
+      highlightAc(acIdx);
+    }
+  });
+
+  document.getElementById("btnMultiAdd").addEventListener("click", () => {
+    if (input.value.trim()) addFirst(); else input.focus();
   });
 
   document.addEventListener("click", e => {
-    if (!dropdown.contains(e.target) && e.target !== input)
+    if (!dropdown.contains(e.target) && e.target !== input && e.target.id !== "btnMultiAdd")
       dropdown.style.display = "none";
   });
 }
